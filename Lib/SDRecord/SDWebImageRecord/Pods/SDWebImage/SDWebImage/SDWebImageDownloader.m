@@ -274,6 +274,7 @@
     }
     
     LOCK(self.operationsLock);
+    // 先通过 url 尝试去获取下载的operation，防止多个operation对应的都是同一个url
     SDWebImageDownloaderOperation *operation = [self.URLOperations objectForKey:url];
     // There is a case that the operation may be marked as finished, but not been removed from `self.URLOperations`.
     if (!operation || operation.isFinished) {
@@ -294,7 +295,7 @@
         [self.downloadQueue addOperation:operation];
     }
     UNLOCK(self.operationsLock);
-
+    // 同一个url，发起多次请求，那么只会生成一个operation，并且会持有同url的进度回调和完成回调
     id downloadOperationCancelToken = [operation addHandlersForProgress:progressBlock completed:completedBlock];
     
     SDWebImageDownloadToken *token = [SDWebImageDownloadToken new];

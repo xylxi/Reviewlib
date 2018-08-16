@@ -204,11 +204,12 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
 
 #if SD_UIKIT
         // Subscribe to app events
+        // app 将要被终止的通知
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(deleteOldFiles)
                                                      name:UIApplicationWillTerminateNotification
                                                    object:nil];
-
+        // app进入后台通知
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(backgroundDeleteOldFiles)
                                                      name:UIApplicationDidEnterBackgroundNotification
@@ -235,11 +236,14 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
     }
 }
 
+// 获取指定path下key的文件名，因为有可能用户会添加customPaths
 - (nullable NSString *)cachePathForKey:(nullable NSString *)key inPath:(nonnull NSString *)path {
     NSString *filename = [self cachedFileNameForKey:key];
     return [path stringByAppendingPathComponent:filename];
 }
 
+// 获取默认path下key的文件名
+// com.hackemist.SDWebImageCache.default
 - (nullable NSString *)defaultCachePathForKey:(nullable NSString *)key {
     return [self cachePathForKey:key inPath:self.diskCachePath];
 }
@@ -308,6 +312,7 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
                     } else {
                         format = SDImageFormatJPEG;
                     }
+                    // 将 image 编码成 NSData
                     data = [[SDWebImageCodersManager sharedInstance] encodedDataWithImage:image format:format];
                 }
                 [self _storeImageDataToDisk:data forKey:key];
@@ -485,6 +490,7 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
         image = [self scaledImageForKey:key image:image];
         if (self.config.shouldDecompressImages) {
             BOOL shouldScaleDown = options & SDImageCacheScaleDownLargeImages;
+            // 解码
             image = [[SDWebImageCodersManager sharedInstance] decompressedImageWithImage:image data:&data options:@{SDWebImageCoderScaleDownLargeImagesKey: @(shouldScaleDown)}];
         }
         return image;
@@ -511,6 +517,7 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
     
     // First check the in-memory cache...
     UIImage *image = [self imageFromMemoryCacheForKey:key];
+    // 从内存中获取到图片 && 没有设置 SDImageCacheQueryDataWhenInMemory
     BOOL shouldQueryMemoryOnly = (image && !(options & SDImageCacheQueryDataWhenInMemory));
     if (shouldQueryMemoryOnly) {
         if (doneBlock) {
@@ -522,7 +529,7 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
     NSOperation *operation = [NSOperation new];
     void(^queryDiskBlock)(void) =  ^{
         if (operation.isCancelled) {
-            // do not call the completion if cancelled
+            // 当 operationQueue 执行到这个 operation 的时候，如果这个 operation 已经被取消了，那就 return
             return;
         }
         
@@ -555,6 +562,7 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
         }
     };
     
+    // 如果是同步获取缓存，那么立马执行，否则加入到队列中
     if (options & SDImageCacheQueryDiskSync) {
         queryDiskBlock();
     } else {
@@ -703,6 +711,7 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
 
         // If our remaining disk cache exceeds a configured maximum size, perform a second
         // size-based cleanup pass.  We delete the oldest files first.
+        // 上面先删除过期文件、然后如果缓存超过了规定大小，那么在按文件的时间删除文件，直到缓存在指定的范围内
         if (self.config.maxCacheSize > 0 && currentCacheSize > self.config.maxCacheSize) {
             // Target half of our maximum cache size for this cleanup pass.
             const NSUInteger desiredCacheSize = self.config.maxCacheSize / 2;

@@ -11,9 +11,13 @@
 @interface SDWebImagePrefetcher ()
 
 @property (strong, nonatomic, nonnull) SDWebImageManager *manager;
+// 所有的请求URL
 @property (strong, atomic, nullable) NSArray<NSURL *> *prefetchURLs; // may be accessed from different queue
+// 请求的个数
 @property (assign, nonatomic) NSUInteger requestedCount;
+// 下载失败的个数
 @property (assign, nonatomic) NSUInteger skippedCount;
+// 下载完成(无论成功失败)的个数
 @property (assign, nonatomic) NSUInteger finishedCount;
 @property (assign, nonatomic) NSTimeInterval startedTime;
 @property (copy, nonatomic, nullable) SDWebImagePrefetcherCompletionBlock completionBlock;
@@ -56,11 +60,13 @@
 
 - (void)startPrefetchingAtIndex:(NSUInteger)index {
     NSURL *currentURL;
+    // 加锁
     @synchronized(self) {
         if (index >= self.prefetchURLs.count) return;
         currentURL = self.prefetchURLs[index];
         self.requestedCount++;
     }
+    // 下载
     [self.manager loadImageWithURL:currentURL options:self.options progress:nil completed:^(UIImage *image, NSData *data, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
         if (!finished) return;
         self.finishedCount++;
@@ -131,6 +137,7 @@
     }
 }
 
+// 清空所有下载
 - (void)cancelPrefetching {
     @synchronized(self) {
         self.prefetchURLs = nil;

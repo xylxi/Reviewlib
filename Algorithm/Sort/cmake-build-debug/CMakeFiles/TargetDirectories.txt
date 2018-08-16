@@ -1,0 +1,3 @@
+/Users/wangzhuhongwei/Documents/iosgit/Algorithm/Sort/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/wangzhuhongwei/Documents/iosgit/Algorithm/Sort/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/wangzhuhongwei/Documents/iosgit/Algorithm/Sort/cmake-build-debug/CMakeFiles/Sort.dir

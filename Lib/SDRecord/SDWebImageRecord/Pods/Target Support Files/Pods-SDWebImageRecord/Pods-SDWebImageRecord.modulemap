@@ -1,0 +1,6 @@
+module Pods_SDWebImageRecord {
+  umbrella header "Pods-SDWebImageRecord-umbrella.h"
+
+  export *
+  module * { export * }
+}

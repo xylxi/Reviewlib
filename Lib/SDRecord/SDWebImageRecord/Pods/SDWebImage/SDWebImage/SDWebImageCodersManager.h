@@ -38,6 +38,7 @@
 
 /**
  All coders in coders manager. The coders array is a priority queue, which means the later added coder will have the highest priority
+ 这个是需要线程保护的使用的是 copy 修饰
  */
 @property (nonatomic, copy, readwrite, nullable) NSArray<id<SDWebImageCoder>> *coders;
 

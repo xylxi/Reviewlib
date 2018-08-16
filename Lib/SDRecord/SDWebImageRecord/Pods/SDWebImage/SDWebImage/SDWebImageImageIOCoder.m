@@ -14,7 +14,9 @@
 #import "UIImage+MultiFormat.h"
 
 #if SD_UIKIT || SD_WATCH
+// 每个像素占用多少字节 4
 static const size_t kBytesPerPixel = 4;
+// 一个颜色的字节数
 static const size_t kBitsPerComponent = 8;
 
 /*
@@ -23,6 +25,7 @@ static const size_t kBitsPerComponent = 8;
  * Suggested value for iPad2 and iPhone 4: 120.
  * Suggested value for iPhone 3G and iPod 2 and earlier devices: 30.
  */
+// 定义解码图像的最大大小为60MB
 static const CGFloat kDestImageSizeMB = 60.0f;
 
 /*
@@ -31,13 +34,17 @@ static const CGFloat kDestImageSizeMB = 60.0f;
  * Suggested value for iPad2 and iPhone 4: 40.
  * Suggested value for iPhone 3G and iPod 2 and earlier devices: 10.
  */
+// 定义用于解码图像的最大大小为20MB
 static const CGFloat kSourceImageTileSizeMB = 20.0f;
-
+// 每 MB 有多少字节
 static const CGFloat kBytesPerMB = 1024.0f * 1024.0f;
+// 每 MB 有多少个像素(一个像素是4节)
 static const CGFloat kPixelsPerMB = kBytesPerMB / kBytesPerPixel;
+// 定义解码完的图像的最大像素数
 static const CGFloat kDestTotalPixels = kDestImageSizeMB * kPixelsPerMB;
+// 定义用于解码的图像的最大像素数
 static const CGFloat kTileTotalPixels = kSourceImageTileSizeMB * kPixelsPerMB;
-
+// 定义重叠像素大小为2像素
 static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to overlap the seems where tiles meet.
 #endif
 
@@ -85,6 +92,7 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
             // Do not support WebP progressive decoding
             return NO;
         case SDImageFormatHEIC:
+            // iOS11 才支持
             // Check HEIC decoding compatibility
             return [[self class] canDecodeFromHEICFormat];
         default:
@@ -92,6 +100,10 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
     }
 }
 
+/**
+ * 根据 data(需要解码的图片数据？) 生成 image
+ * 这个图片还没有被解码
+ */
 - (UIImage *)decodedImageWithData:(NSData *)data {
     if (!data) {
         return nil;
@@ -103,8 +115,10 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
     return image;
 }
 
+// 这里获取的渐进图是没有解码的
 - (UIImage *)incrementallyDecodedImageWithData:(NSData *)data finished:(BOOL)finished {
     if (!_imageSource) {
+        // 创建一个增量图像源
         _imageSource = CGImageSourceCreateIncremental(NULL);
     }
     UIImage *image;
@@ -115,6 +129,7 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
     // Update the data source, we must pass ALL the data, not just the new bytes
     CGImageSourceUpdateData(_imageSource, (__bridge CFDataRef)data, finished);
     
+    // 获取 image 的宽高和方向
     if (_width + _height == 0) {
         CFDictionaryRef properties = CGImageSourceCopyPropertiesAtIndex(_imageSource, 0, NULL);
         if (properties) {
@@ -123,6 +138,7 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
             if (val) CFNumberGetValue(val, kCFNumberLongType, &_height);
             val = CFDictionaryGetValue(properties, kCGImagePropertyPixelWidth);
             if (val) CFNumberGetValue(val, kCFNumberLongType, &_width);
+            // 获取图片的方向
             val = CFDictionaryGetValue(properties, kCGImagePropertyOrientation);
             if (val) CFNumberGetValue(val, kCFNumberNSIntegerType, &orientationValue);
             CFRelease(properties);
@@ -138,11 +154,12 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
     }
     
     if (_width + _height > 0) {
-        // Create the image
+        // Create the image 位图
         CGImageRef partialImageRef = CGImageSourceCreateImageAtIndex(_imageSource, 0, NULL);
-        
+        // 好像不解码，是不是不在乎呢?
         if (partialImageRef) {
 #if SD_UIKIT || SD_WATCH
+            // 根据位图获取图片
             image = [[UIImage alloc] initWithCGImage:partialImageRef scale:1 orientation:_orientation];
 #elif SD_MAC
             image = [[UIImage alloc] initWithCGImage:partialImageRef size:NSZeroSize];
@@ -153,6 +170,7 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
     }
     
     if (finished) {
+        // 如果图片的所有数据都下载好了，就不需要渐进图了
         if (_imageSource) {
             CFRelease(_imageSource);
             _imageSource = NULL;
@@ -180,8 +198,10 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
         }
     }
     if (!shouldScaleDown) {
+        // 按原尺寸解码
         return [self sd_decompressedImageWithImage:image];
     } else {
+        // 缩放解码
         UIImage *scaledDownImage = [self sd_decompressedAndScaledDownImageWithImage:image];
         if (scaledDownImage && !CGSizeEqualToSize(scaledDownImage.size, image.size)) {
             // if the image is scaled down, need to modify the data pointer as well
@@ -212,6 +232,7 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
         BOOL hasAlpha = SDCGImageRefContainsAlpha(imageRef);
         // iOS display alpha info (BRGA8888/BGRX8888)
         CGBitmapInfo bitmapInfo = kCGBitmapByteOrder32Host;
+        // 当图片不包含 alpha 的时候使用 kCGImageAlphaNoneSkipFirst ，否则使用 kCGImageAlphaPremultipliedFirst 。另外，这里也提到了字节顺序应该使用 32 位的主机字节顺序 kCGBitmapByteOrder32Host
         bitmapInfo |= hasAlpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
         
         size_t width = CGImageGetWidth(imageRef);
@@ -242,6 +263,7 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
     }
 }
 
+// 如果是很大的图片，那么一点点绘制到一个指定大小的小图上？
 - (nullable UIImage *)sd_decompressedAndScaledDownImageWithImage:(nullable UIImage *)image {
     if (![[self class] shouldDecodeImage:image]) {
         return image;
@@ -265,6 +287,7 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
         // Determine the scale ratio to apply to the input image
         // that results in an output image of the defined size.
         // see kDestImageSizeMB, and how it relates to destTotalPixels.
+        //计算压缩比例，目标图片的像素总数／源图的像素总数 => 如果是压缩的大图，SD 设置最大的就是 kDestTotalPixels
         float imageScale = kDestTotalPixels / sourceTotalPixels;
         CGSize destResolution = CGSizeZero;
         destResolution.width = (int)(sourceResolution.width*imageScale);
@@ -291,6 +314,7 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
         if (destContext == NULL) {
             return image;
         }
+        // 设置图像上下文的绘图质量
         CGContextSetInterpolationQuality(destContext, kCGInterpolationHigh);
         
         // Now define the size of the rectangle to be used for the
@@ -302,11 +326,13 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
         // band. Therefore we fully utilize all of the pixel data that results
         // from a decoding opertion by achnoring our tile size to the full
         // width of the input image.
+        //源图的切割块Size
         CGRect sourceTile = CGRectZero;
         sourceTile.size.width = sourceResolution.width;
         // The source tile height is dynamic. Since we specified the size
         // of the source tile in MB, see how many rows of pixels high it
         // can be given the input image width.
+         // 计算来源块的高度
         sourceTile.size.height = (int)(kTileTotalPixels / sourceTile.size.width );
         sourceTile.origin.x = 0.0f;
         // The output tile is the same proportions as the input tile, but
@@ -333,9 +359,13 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
         sourceTile.size.height += sourceSeemOverlap;
         destTile.size.height += kDestSeemOverlap;
         for( int y = 0; y < iterations; ++y ) {
+            // 分段绘制到目标上下文上
             @autoreleasepool {
+                //源块的纵坐标
                 sourceTile.origin.y = y * sourceTileHeightMinusOverlap + sourceSeemOverlap;
+                //目标块的纵坐标
                 destTile.origin.y = destResolution.height - (( y + 1 ) * sourceTileHeightMinusOverlap * imageScale + kDestSeemOverlap);
+                //根据计算的源图的数据和sourceTile，创建源图的一个子块
                 sourceTileImageRef = CGImageCreateWithImageInRect( sourceImageRef, sourceTile );
                 if( y == iterations - 1 && remainder ) {
                     float dify = destTile.size.height;
@@ -343,6 +373,7 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
                     dify -= destTile.size.height;
                     destTile.origin.y += dify;
                 }
+                // 分段绘制到目标上下文上
                 CGContextDrawImage( destContext, destTile, sourceTileImageRef );
                 CGImageRelease( sourceTileImageRef );
             }
@@ -377,11 +408,15 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
     }
 }
 
+/**
+ *  将 image 转成 NSData，以便缓存
+ */
 - (NSData *)encodedDataWithImage:(UIImage *)image format:(SDImageFormat)format {
     if (!image) {
         return nil;
     }
     
+    // 如果没有图片格式，那么就当着 PNG 或者 JPEG
     if (format == SDImageFormatUndefined) {
         BOOL hasAlpha = SDCGImageRefContainsAlpha(image.CGImage);
         if (hasAlpha) {
@@ -391,10 +426,12 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
         }
     }
     
+    // 用于接受 image.CGImage 的data的？
     NSMutableData *imageData = [NSMutableData data];
     CFStringRef imageUTType = [NSData sd_UTTypeFromSDImageFormat:format];
     
-    // Create an image destination.
+
+    // 创建图像目的地
     CGImageDestinationRef imageDestination = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)imageData, imageUTType, 1, NULL);
     if (!imageDestination) {
         // Handle failure.
@@ -403,11 +440,12 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
     
     NSMutableDictionary *properties = [NSMutableDictionary dictionary];
 #if SD_UIKIT || SD_WATCH
+    // 获取图片方向
     NSInteger exifOrientation = [SDWebImageCoderHelper exifOrientationFromImageOrientation:image.imageOrientation];
     [properties setValue:@(exifOrientation) forKey:(__bridge NSString *)kCGImagePropertyOrientation];
 #endif
     
-    // Add your image to the destination.
+    // 添加图片和选项到目的地中，自动就会转成 NSData 放入到 imageData 中
     CGImageDestinationAddImage(imageDestination, image.CGImage, (__bridge CFDictionaryRef)properties);
     
     // Finalize the destination.
@@ -428,7 +466,7 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
         return NO;
     }
     
-    // do not decode animated images
+    // 动态图不需要解码
     if (image.images != nil) {
         return NO;
     }
@@ -488,6 +526,9 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
 }
 
 #if SD_UIKIT || SD_WATCH
+/**
+ * 判断图片是否比预定的大小要大，如果大，那么需要缩小
+ */
 + (BOOL)shouldScaleDownImage:(nonnull UIImage *)image {
     BOOL shouldScaleDown = YES;
     

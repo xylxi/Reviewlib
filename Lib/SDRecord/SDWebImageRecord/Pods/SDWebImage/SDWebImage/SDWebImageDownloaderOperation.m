@@ -86,6 +86,7 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
     return self;
 }
 
+// 将和operation的url一样的请求的回调保存起来
 - (nullable id)addHandlersForProgress:(nullable SDWebImageDownloaderProgressBlock)progressBlock
                             completed:(nullable SDWebImageDownloaderCompletedBlock)completedBlock {
     SDCallbacksDictionary *callbacks = [NSMutableDictionary new];
@@ -106,10 +107,13 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
     return [callbacks copy]; // strip mutability here
 }
 
+// 根据 token，将自己从 operation 中的 callbackBlocks 数组中删除，并判断是否要正则取消下载请求
 - (BOOL)cancel:(nullable id)token {
     BOOL shouldCancel = NO;
     LOCK(self.callbacksLock);
+    // 将 token(进度block和完成block) 从数组中移除
     [self.callbackBlocks removeObjectIdenticalTo:token];
+    // 如果数组中没有元素了，就正则的取消请求操作
     if (self.callbackBlocks.count == 0) {
         shouldCancel = YES;
     }
@@ -345,11 +349,13 @@ didReceiveResponse:(NSURLResponse *)response
         
         // progressive decode the image in coder queue
         dispatch_async(self.coderQueue, ^{
+            // 获得渐进图(还没有解码)
             UIImage *image = [self.progressiveCoder incrementallyDecodedImageWithData:imageData finished:finished];
             if (image) {
                 NSString *key = [[SDWebImageManager sharedManager] cacheKeyForURL:self.request.URL];
                 image = [self scaledImageForKey:key image:image];
                 if (self.shouldDecompressImages) {
+                    // 对渐进图进行解码
                     image = [[SDWebImageCodersManager sharedInstance] decompressedImageWithImage:image data:&imageData options:@{SDWebImageCoderScaleDownLargeImagesKey: @(NO)}];
                 }
                 

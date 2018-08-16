@@ -15,6 +15,9 @@
 
 @implementation SDWebImageCoderHelper
 
+/**
+ *  将 frames 数组转为动态图
+ */
 + (UIImage *)animatedImageWithFrames:(NSArray<SDWebImageFrame *> *)frames {
     NSUInteger frameCount = frames.count;
     if (frameCount == 0) {
@@ -24,28 +27,35 @@
     UIImage *animatedImage;
     
 #if SD_UIKIT || SD_WATCH
+    // 帧数组的时长数组
     NSUInteger durations[frameCount];
     for (size_t i = 0; i < frameCount; i++) {
         durations[i] = frames[i].duration * 1000;
     }
+    // 数组的最大公约数
     NSUInteger const gcd = gcdArray(frameCount, durations);
+    // 生成临时变量保存总时长
     __block NSUInteger totalDuration = 0;
     NSMutableArray<UIImage *> *animatedImages = [NSMutableArray arrayWithCapacity:frameCount];
+    // 遍历传入的SDWebImageFrame对象数组
     [frames enumerateObjectsUsingBlock:^(SDWebImageFrame * _Nonnull frame, NSUInteger idx, BOOL * _Nonnull stop) {
         UIImage *image = frame.image;
         NSUInteger duration = frame.duration * 1000;
         totalDuration += duration;
+        // 生成临时变量保存重复次数
         NSUInteger repeatCount;
         if (gcd) {
             repeatCount = duration / gcd;
         } else {
             repeatCount = 1;
         }
+        // 可totalDuration的时间内重复几次
         for (size_t i = 0; i < repeatCount; ++i) {
             [animatedImages addObject:image];
         }
     }];
     
+    // 生成 image
     animatedImage = [UIImage animatedImageWithImages:animatedImages duration:totalDuration / 1000.f];
     
 #else
@@ -97,7 +107,7 @@
     if (frameCount == 0) {
         return nil;
     }
-    
+    // 没帧显示的时间
     NSTimeInterval avgDuration = animatedImage.duration / frameCount;
     if (avgDuration == 0) {
         avgDuration = 0.1; // if it's a animated image but no duration, set it to default 100ms (this do not have that 10ms limit like GIF or WebP to allow custom coder provide the limit)
@@ -105,6 +115,7 @@
     
     __block NSUInteger index = 0;
     __block NSUInteger repeatCount = 1;
+    // 上一张图片，为了统计有多少张相同的图片，以便记录出时长
     __block UIImage *previousImage = animatedImages.firstObject;
     [animatedImages enumerateObjectsUsingBlock:^(UIImage * _Nonnull image, NSUInteger idx, BOOL * _Nonnull stop) {
         // ignore first

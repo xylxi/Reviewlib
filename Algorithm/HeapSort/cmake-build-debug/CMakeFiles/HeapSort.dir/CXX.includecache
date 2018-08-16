@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/wangzhuhongwei/Documents/iosgit/Algorithm/HeapSort/HeapDemo.h
+iostream
+-
+math.h
+-
+
+/Users/wangzhuhongwei/Documents/iosgit/Algorithm/HeapSort/main.cpp
+iostream
+-
+HeapDemo.h
+/Users/wangzhuhongwei/Documents/iosgit/Algorithm/HeapSort/HeapDemo.h
+
