@@ -84,6 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
  frames will reduce the CPU cost.
  
  See `animatedImageMemorySize` for memory cost.
+ 预加载所有帧（到内存）
  */
 @property (nonatomic) BOOL preloadAllAnimatedImageFrames;
 

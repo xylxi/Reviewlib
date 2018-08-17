@@ -85,9 +85,13 @@ static CGFloat _NSStringPathScale(NSString *string) {
 
 
 @implementation YYImage {
+    // 解码器
     YYImageDecoder *_decoder;
+    // 预加载的图像帧
     NSArray *_preloadedFrames;
+    // 信号量
     dispatch_semaphore_t _preloadedLock;
+    // 内存占用量
     NSUInteger _bytesPerFrame;
 }
 
@@ -101,6 +105,7 @@ static CGFloat _NSStringPathScale(NSString *string) {
     CGFloat scale = 1;
     
     // If no extension, guess by system supported (same as UIImage).
+    // 如果图片名字传递的不全，例如 pia@2x.png => pia，那么手动拼接成 pia@2x.png
     NSArray *exts = ext.length > 0 ? @[ext] : @[@"", @"png", @"jpeg", @"jpg", @"gif", @"webp", @"apng"];
     NSArray *scales = _NSBundlePreferredScales();
     for (int s = 0; s < scales.count; s++) {
@@ -113,7 +118,7 @@ static CGFloat _NSStringPathScale(NSString *string) {
         if (path) break;
     }
     if (path.length == 0) return nil;
-    
+    // 获取文件的 data
     NSData *data = [NSData dataWithContentsOfFile:path];
     if (data.length == 0) return nil;
     
@@ -147,9 +152,11 @@ static CGFloat _NSStringPathScale(NSString *string) {
     _preloadedLock = dispatch_semaphore_create(1);
     @autoreleasepool {
         YYImageDecoder *decoder = [YYImageDecoder decoderWithData:data scale:scale];
+        // 取第一帧、并且解压缩 image
         YYImageFrame *frame = [decoder frameAtIndex:0 decodeForDisplay:YES];
         UIImage *image = frame.image;
         if (!image) return nil;
+        // 创建 image?
         self = [self initWithCGImage:image.CGImage scale:decoder.scale orientation:image.imageOrientation];
         if (!self) return nil;
         _animatedImageType = decoder.type;

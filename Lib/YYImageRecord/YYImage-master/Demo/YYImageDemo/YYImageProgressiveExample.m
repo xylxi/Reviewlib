@@ -99,6 +99,7 @@
             name = @"mew_interlaced.png";
         } else {
             name = @"mew_interlaced.gif";
+//            name = @"niconiconi@2x.gif";
         }
     }
     

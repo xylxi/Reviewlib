@@ -114,8 +114,10 @@ static int64_t _YYDeviceMemoryFree() {
 
 typedef NS_ENUM(NSUInteger, YYAnimatedImageType) {
     YYAnimatedImageTypeNone = 0,
+    // 单个 image
     YYAnimatedImageTypeImage,
     YYAnimatedImageTypeHighlightedImage,
+    // 多个 image
     YYAnimatedImageTypeImages,
     YYAnimatedImageTypeHighlightedImages,
 };
@@ -125,6 +127,7 @@ typedef NS_ENUM(NSUInteger, YYAnimatedImageType) {
     UIImage <YYAnimatedImage> *_curAnimatedImage;
     
     dispatch_semaphore_t _lock; ///< lock for _buffer
+    //
     NSOperationQueue *_requestQueue; ///< image request queue, serial
     
     CADisplayLink *_link; ///< ticker for change frame
@@ -324,6 +327,7 @@ typedef NS_ENUM(NSUInteger, YYAnimatedImageType) {
     return curType;
 }
 
+// 根据 type 选择设置 image、highlightedImage、animationImages、highlightedAnimationImages属性
 - (void)setImage:(id)image withType:(YYAnimatedImageType)type {
     [self stopAnimating];
     if (_link) [self resetAnimated];
@@ -378,17 +382,23 @@ typedef NS_ENUM(NSUInteger, YYAnimatedImageType) {
 
 // dynamically adjust buffer size for current memory.
 - (void)calcMaxBufferCount {
+    // 没帧所占内存
     int64_t bytes = (int64_t)_curAnimatedImage.animatedImageBytesPerFrame;
     if (bytes == 0) bytes = 1024;
-    
+    // 内存大小
     int64_t total = _YYDeviceMemoryTotal();
+    // 还剩余内存的大小
     int64_t free = _YYDeviceMemoryFree();
+    // 限制使用的内存大小
     int64_t max = MIN(total * 0.2, free * 0.6);
+    // 缓存区大小
     max = MAX(max, BUFFER_SIZE);
     if (_maxBufferSize) max = max > _maxBufferSize ? _maxBufferSize : max;
+    // buffer 可以存放的帧数
     double maxBufferCount = (double)max / (double)bytes;
     if (maxBufferCount < 1) maxBufferCount = 1;
     else if (maxBufferCount > 512) maxBufferCount = 512;
+    // 一个 buffer 可以存储的帧个数
     _maxBufferCount = maxBufferCount;
 }
 

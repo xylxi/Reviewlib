@@ -125,7 +125,7 @@ typedef NS_ENUM(NSUInteger, YYImageBlendOperation) {
  
  */
 @interface YYImageDecoder : NSObject
-
+// 原始的数据
 @property (nullable, nonatomic, readonly) NSData *data;    ///< Image data.
 @property (nonatomic, readonly) YYImageType type;          ///< Image data type.
 @property (nonatomic, readonly) CGFloat scale;             ///< Image scale.
@@ -133,6 +133,7 @@ typedef NS_ENUM(NSUInteger, YYImageBlendOperation) {
 @property (nonatomic, readonly) NSUInteger loopCount;      ///< Image loop count, 0 means infinite.
 @property (nonatomic, readonly) NSUInteger width;          ///< Image canvas width.
 @property (nonatomic, readonly) NSUInteger height;         ///< Image canvas height.
+// 判断 data 是不是最终完整的data(因为可以逐步加载，所以得通过这个值判断)
 @property (nonatomic, readonly, getter=isFinalized) BOOL finalized;
 
 /**

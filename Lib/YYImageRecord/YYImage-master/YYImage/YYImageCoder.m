@@ -1064,6 +1064,7 @@ CGImageRef YYCGImageCreateCopyWithOrientation(CGImageRef imageRef, UIImageOrient
 
 YYImageType YYImageDetectType(CFDataRef data) {
     if (!data) return YYImageTypeUnknown;
+    // 8 个字节
     uint64_t length = CFDataGetLength(data);
     if (length < 16) return YYImageTypeUnknown;
     
@@ -1507,7 +1508,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
 
 @implementation YYImageDecoder {
     pthread_mutex_t _lock; // recursive lock
-    
+    // 是否推测图像源类型
     BOOL _sourceTypeDetected;
     CGImageSourceRef _source;
     yy_png_info *_apngSource;
@@ -1553,6 +1554,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
     
     pthread_mutexattr_t attr;
     pthread_mutexattr_init (&attr);
+    // 递归锁
     pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
     pthread_mutex_init (&_lock, &attr);
     pthread_mutexattr_destroy (&attr);
@@ -1609,9 +1611,10 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
     if (data.length < _data.length) return NO;
     _finalized = final;
     _data = data;
-    
+    // 图片类型
     YYImageType type = YYImageDetectType((__bridge CFDataRef)data);
     if (_sourceTypeDetected) {
+        // 判断两次数据的图片类型是不是一致
         if (_type != type) {
             return NO;
         } else {
@@ -1651,6 +1654,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
         CFRelease(imageRef);
         if (!image) return nil;
         image.yy_isDecodedForDisplay = decoded;
+        // 已经解码的 image
         frame.image = image;
         return frame;
     }
@@ -1943,7 +1947,9 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
     dispatch_semaphore_signal(_framesLock);
 }
 
+// 动态图的数据处理
 - (void)_updateSourceImageIO {
+    // 初始化默认值
     _width = 0;
     _height = 0;
     _orientation = UIImageOrientationUp;
@@ -1954,12 +1960,15 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
     
     if (!_source) {
         if (_finalized) {
+            // 完整数据的 CGImageSourceRef
             _source = CGImageSourceCreateWithData((__bridge CFDataRef)_data, NULL);
         } else {
+            // 渐进式的 CGImageSourceRef
             _source = CGImageSourceCreateIncremental(NULL);
             if (_source) CGImageSourceUpdateData(_source, (__bridge CFDataRef)_data, false);
         }
     } else {
+        // 渐进式 CGImageSourceRef 跟新数据
         CGImageSourceUpdateData(_source, (__bridge CFDataRef)_data, _finalized);
     }
     if (!_source) return;
@@ -1968,6 +1977,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
     if (_frameCount == 0) return;
     
     if (!_finalized) { // ignore multi-frame before finalized
+        // 在渐进是的动态途中，如果没有加载完，那么只显示第一帧??
         _frameCount = 1;
     } else {
         if (_type == YYImageTypePNG) { // use custom apng decoder and ignore multi-frame
@@ -1991,6 +2001,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
      */
     NSMutableArray *frames = [NSMutableArray new];
     for (NSUInteger i = 0; i < _frameCount; i++) {
+        // 帧解码
         _YYImageDecoderFrame *frame = [_YYImageDecoderFrame new];
         frame.index = i;
         frame.blendFromIndex = i;
@@ -2000,6 +2011,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
         
         CFDictionaryRef properties = CGImageSourceCopyPropertiesAtIndex(_source, i, NULL);
         if (properties) {
+
             NSTimeInterval duration = 0;
             NSInteger orientationValue = 0, width = 0, height = 0;
             CFTypeRef value = NULL;
@@ -2020,7 +2032,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
                     if (value) CFNumberGetValue(value, kCFNumberDoubleType, &duration);
                 }
             }
-            
+            // 第 i 张的信息(宽高、时长)
             frame.width = width;
             frame.height = height;
             frame.duration = duration;
@@ -2031,6 +2043,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
                 value = CFDictionaryGetValue(properties, kCGImagePropertyOrientation);
                 if (value) {
                     CFNumberGetValue(value, kCFNumberNSIntegerType, &orientationValue);
+                    // 记录图片的方向
                     _orientation = YYUIImageOrientationFromEXIFValue(orientationValue);
                 }
             }
@@ -2056,6 +2069,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
             size_t width = CGImageGetWidth(imageRef);
             size_t height = CGImageGetHeight(imageRef);
             if (width == _width && height == _height) {
+                // imageRefExtended 已经解码的 image
                 CGImageRef imageRefExtended = YYCGImageCreateDecodedCopy(imageRef, YES);
                 if (imageRefExtended) {
                     CFRelease(imageRef);
