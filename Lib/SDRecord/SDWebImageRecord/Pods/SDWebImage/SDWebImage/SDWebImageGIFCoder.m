@@ -99,6 +99,9 @@
 #endif
 }
 
+/**
+ * 获取帧的显示时长
+ */
 - (float)sd_frameDurationAtIndex:(NSUInteger)index source:(CGImageSourceRef)source {
     float frameDuration = 0.1f;
     CFDictionaryRef cfFrameProperties = CGImageSourceCopyPropertiesAtIndex(source, index, nil);
@@ -143,6 +146,11 @@
     return (format == SDImageFormatGIF);
 }
 
+/**
+ * 1. 可变数据
+ * 2. 图片类型
+ * 3. 图片动态属性
+ */
 - (NSData *)encodedDataWithImage:(UIImage *)image format:(SDImageFormat)format {
     if (!image) {
         return nil;

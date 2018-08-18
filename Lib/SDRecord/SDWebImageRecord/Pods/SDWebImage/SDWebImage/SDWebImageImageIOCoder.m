@@ -154,9 +154,8 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
     }
     
     if (_width + _height > 0) {
-        // Create the image 位图
+        // Create the image
         CGImageRef partialImageRef = CGImageSourceCreateImageAtIndex(_imageSource, 0, NULL);
-        // 好像不解码，是不是不在乎呢?
         if (partialImageRef) {
 #if SD_UIKIT || SD_WATCH
             // 根据位图获取图片
@@ -410,6 +409,9 @@ static const CGFloat kDestSeemOverlap = 2.0f;   // the numbers of pixels to over
 
 /**
  *  将 image 转成 NSData，以便缓存
+ *  1. 存储数据的可变data对象
+ *  2. 图片格式
+ *  3. 图片方向
  */
 - (NSData *)encodedDataWithImage:(UIImage *)image format:(SDImageFormat)format {
     if (!image) {

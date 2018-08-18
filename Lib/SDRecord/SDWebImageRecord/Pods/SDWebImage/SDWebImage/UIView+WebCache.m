@@ -135,6 +135,7 @@ static char TAG_ACTIVITY_SHOW;
                 return;
             }
             
+            // 如果没有设置避免设置图片
             UIImage *targetImage = nil;
             NSData *targetData = nil;
             if (image) {

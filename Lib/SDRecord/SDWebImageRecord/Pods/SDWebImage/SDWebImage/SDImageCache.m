@@ -243,7 +243,7 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
 }
 
 // 获取默认path下key的文件名
-// com.hackemist.SDWebImageCache.default
+// default/com.hackemist.SDWebImageCache.default/
 - (nullable NSString *)defaultCachePathForKey:(nullable NSString *)key {
     return [self cachePathForKey:key inPath:self.diskCachePath];
 }
@@ -566,6 +566,7 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
     if (options & SDImageCacheQueryDiskSync) {
         queryDiskBlock();
     } else {
+        // 将操作放入到串行队列中，子线程执行
         dispatch_async(self.ioQueue, queryDiskBlock);
     }
     

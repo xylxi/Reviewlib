@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6F45B4682126D786007E8696 /* default_pic.png in Resources */ = {isa = PBXBuildFile; fileRef = 6F45B4672126D786007E8696 /* default_pic.png */; };
 		6F5C14C4211F3CCC00496D68 /* MasterViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F5C14C2211F3CCC00496D68 /* MasterViewController.m */; };
 		6FC8C51F211EF273000FBFEE /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6FC8C51E211EF273000FBFEE /* AppDelegate.m */; };
 		6FC8C525211EF273000FBFEE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6FC8C523211EF273000FBFEE /* Main.storyboard */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6F45B4672126D786007E8696 /* default_pic.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = default_pic.png; sourceTree = "<group>"; };
 		6F5C14C2211F3CCC00496D68 /* MasterViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MasterViewController.m; sourceTree = "<group>"; };
 		6F5C14C3211F3CCC00496D68 /* MasterViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MasterViewController.h; sourceTree = "<group>"; };
 		6FC8C51A211EF273000FBFEE /* SDWebImageRecord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SDWebImageRecord.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -73,6 +75,7 @@
 		6FC8C51C211EF273000FBFEE /* SDWebImageRecord */ = {
 			isa = PBXGroup;
 			children = (
+				6F45B4672126D786007E8696 /* default_pic.png */,
 				6FC8C51D211EF273000FBFEE /* AppDelegate.h */,
 				6FC8C51E211EF273000FBFEE /* AppDelegate.m */,
 				6F5C14C3211F3CCC00496D68 /* MasterViewController.h */,
@@ -155,6 +158,7 @@
 			files = (
 				6FC8C52A211EF274000FBFEE /* LaunchScreen.storyboard in Resources */,
 				6FC8C527211EF274000FBFEE /* Assets.xcassets in Resources */,
+				6F45B4682126D786007E8696 /* default_pic.png in Resources */,
 				6FC8C525211EF273000FBFEE /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

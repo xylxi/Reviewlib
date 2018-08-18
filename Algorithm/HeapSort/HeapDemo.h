@@ -33,7 +33,6 @@ void heapSort(T arr[], int n){
         __shiftDown(arr, n, i);
 
     for (int i = 0 ; i < n ; i++) {
-//        cout<<arr[n-i-1]<<endl;
         swap(arr[0],arr[n-i-1]);
         __shiftDown(arr, n - 1 - i, 0);
     }

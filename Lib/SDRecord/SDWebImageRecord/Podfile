@@ -7,7 +7,7 @@ target 'SDWebImageRecord' do
 
   pod 'SDWebImage', '4.4.2'
 #  pod 'Concorde'
-#  pod 'SDWebImage/GIF'
+  pod 'SDWebImage/GIF'
 #  pod 'SDWebImage/WebP'
 
 end
