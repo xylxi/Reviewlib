@@ -84,14 +84,12 @@ static char TAG_ACTIVITY_SHOW;
         
         SDWebImageManager *manager;
         if ([context valueForKey:SDWebImageExternalCustomManagerKey]) {
-            // 支持外部自己创建 SDWebImageManager 类实例
             manager = (SDWebImageManager *)[context valueForKey:SDWebImageExternalCustomManagerKey];
         } else {
             manager = [SDWebImageManager sharedManager];
         }
         
         __weak __typeof(self)wself = self;
-        // 下载进度 block
         SDWebImageDownloaderProgressBlock combinedProgressBlock = ^(NSInteger receivedSize, NSInteger expectedSize, NSURL * _Nullable targetURL) {
             wself.sd_imageProgress.totalUnitCount = expectedSize;
             wself.sd_imageProgress.completedUnitCount = receivedSize;
@@ -99,9 +97,7 @@ static char TAG_ACTIVITY_SHOW;
                 progressBlock(receivedSize, expectedSize, targetURL);
             }
         };
-        // 创建一个获取 image 的 operation
         id <SDWebImageOperation> operation = [manager loadImageWithURL:url options:options progress:combinedProgressBlock completed:^(UIImage *image, NSData *data, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
-            // operation 结束后的回调
             __strong __typeof (wself) sself = wself;
             if (!sself) { return; }
 #if SD_UIKIT
@@ -112,9 +108,7 @@ static char TAG_ACTIVITY_SHOW;
                 sself.sd_imageProgress.totalUnitCount = SDWebImageProgressUnitCountUnknown;
                 sself.sd_imageProgress.completedUnitCount = SDWebImageProgressUnitCountUnknown;
             }
-            // 结束了 or 设置了不要直接设置image的选项
             BOOL shouldCallCompletedBlock = finished || (options & SDWebImageAvoidAutoSetImage);
-            // 判断是否需要设置 image
             BOOL shouldNotSetImage = ((image && (options & SDWebImageAvoidAutoSetImage)) ||
                                       (!image && !(options & SDWebImageDelayPlaceholder)));
             SDWebImageNoParamsBlock callCompletedBlockClojure = ^{
@@ -135,7 +129,6 @@ static char TAG_ACTIVITY_SHOW;
                 return;
             }
             
-            // 如果没有设置避免设置图片
             UIImage *targetImage = nil;
             NSData *targetData = nil;
             if (image) {
@@ -152,7 +145,6 @@ static char TAG_ACTIVITY_SHOW;
             // check whether we should use the image transition
             SDWebImageTransition *transition = nil;
             if (finished && (options & SDWebImageForceTransition || cacheType == SDImageCacheTypeNone)) {
-                // 如果是从网络下载的图片，并且有 transition 选项
                 transition = sself.sd_imageTransition;
             }
 #endif
@@ -165,7 +157,6 @@ static char TAG_ACTIVITY_SHOW;
                 callCompletedBlockClojure();
             });
         }];
-        // 将加载 image 的 operation 存储起来
         [self sd_setImageLoadOperation:operation forKey:validOperationKey];
     } else {
         dispatch_main_async_safe(^{
@@ -199,12 +190,7 @@ static char TAG_ACTIVITY_SHOW;
 }
 
 #if SD_UIKIT || SD_MAC
-- (void)sd_setImage:(UIImage *)image
-          imageData:(NSData *)imageData
-basedOnClassOrViaCustomSetImageBlock:(SDSetImageBlock)setImageBlock
-         transition:(SDWebImageTransition *)transition
-          cacheType:(SDImageCacheType)cacheType
-           imageURL:(NSURL *)imageURL {
+- (void)sd_setImage:(UIImage *)image imageData:(NSData *)imageData basedOnClassOrViaCustomSetImageBlock:(SDSetImageBlock)setImageBlock transition:(SDWebImageTransition *)transition cacheType:(SDImageCacheType)cacheType imageURL:(NSURL *)imageURL {
     UIView *view = self;
     SDSetImageBlock finalSetImageBlock;
     if (setImageBlock) {

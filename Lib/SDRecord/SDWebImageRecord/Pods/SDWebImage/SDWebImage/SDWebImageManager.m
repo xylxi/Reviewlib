@@ -132,7 +132,6 @@
         url = nil;
     }
 
-    // 创建 operation，包括读缓存和下载两个操作
     SDWebImageCombinedOperation *operation = [SDWebImageCombinedOperation new];
     operation.manager = self;
 
@@ -143,41 +142,34 @@
         UNLOCK(self.failedURLsLock);
     }
 
-    // 没有url，或者url在黑名单，但是load的时候没有设置 SDWebImageRetryFailed 选项
     if (url.absoluteString.length == 0 || (!(options & SDWebImageRetryFailed) && isFailedUrl)) {
         [self callCompletionBlockForOperation:operation completion:completedBlock error:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorFileDoesNotExist userInfo:nil] url:url];
         return operation;
     }
 
     LOCK(self.runningOperationsLock);
-    // 保存起来
     [self.runningOperations addObject:operation];
     UNLOCK(self.runningOperationsLock);
     NSString *key = [self cacheKeyForURL:url];
     
     SDImageCacheOptions cacheOptions = 0;
     if (options & SDWebImageQueryDataWhenInMemory) cacheOptions |= SDImageCacheQueryDataWhenInMemory;
-    // SDImageCacheQueryDiskSync 选项可以保证在从内存缓存或者磁盘缓存读取image的操作是同步操作
     if (options & SDWebImageQueryDiskSync) cacheOptions |= SDImageCacheQueryDiskSync;
     if (options & SDWebImageScaleDownLargeImages) cacheOptions |= SDImageCacheScaleDownLargeImages;
     
     __weak SDWebImageCombinedOperation *weakOperation = operation;
-    // 创建读取缓存的操作 cacheOperation
     operation.cacheOperation = [self.imageCache queryCacheOperationForKey:key options:cacheOptions done:^(UIImage *cachedImage, NSData *cachedData, SDImageCacheType cacheType) {
         __strong __typeof(weakOperation) strongOperation = weakOperation;
         if (!strongOperation || strongOperation.isCancelled) {
-            // 判断是否已经被取消了
             [self safelyRemoveOperationFromRunning:strongOperation];
             return;
         }
         
         // Check whether we should download image from network
-        // (没有SDWebImageFromCacheOnly) &&（没有找到缓存 || 刷新缓存) && (代理没有实现 `imageManager:shouldDownloadImageForURL:` 方法)
         BOOL shouldDownload = (!(options & SDWebImageFromCacheOnly))
             && (!cachedImage || options & SDWebImageRefreshCached)
             && (![self.delegate respondsToSelector:@selector(imageManager:shouldDownloadImageForURL:)] || [self.delegate imageManager:self shouldDownloadImageForURL:url]);
         if (shouldDownload) {
-            // 如果是有缓存图片但是设置了刷新缓存的选项
             if (cachedImage && options & SDWebImageRefreshCached) {
                 // If image was found in the cache but SDWebImageRefreshCached is provided, notify about the cached image
                 // AND try to re-download it in order to let a chance to NSURLCache to refresh it from server.
@@ -197,18 +189,14 @@
             
             if (cachedImage && options & SDWebImageRefreshCached) {
                 // force progressive off if image already cached but forced refreshing
-                // 取消渐进下载的选项
                 downloaderOptions &= ~SDWebImageDownloaderProgressiveDownload;
                 // ignore image read from NSURLCache if image if cached but force refreshing
-                // 忽略从 NSURLCache 读取图片
                 downloaderOptions |= SDWebImageDownloaderIgnoreCachedResponse;
             }
             
             // `SDWebImageCombinedOperation` -> `SDWebImageDownloadToken` -> `downloadOperationCancelToken`, which is a `SDCallbacksDictionary` and retain the completed block below, so we need weak-strong again to avoid retain cycle
             __weak typeof(strongOperation) weakSubOperation = strongOperation;
-            // 下载操作的取消是通过 token 来取消的
             strongOperation.downloadToken = [self.imageDownloader downloadImageWithURL:url options:downloaderOptions progress:progressBlock completed:^(UIImage *downloadedImage, NSData *downloadedData, NSError *error, BOOL finished) {
-                // 下载完成 （解压缩的image、根据url得到的data)
                 __strong typeof(weakSubOperation) strongSubOperation = weakSubOperation;
                 if (!strongSubOperation || strongSubOperation.isCancelled) {
                     // Do nothing if the operation was cancelled
@@ -221,7 +209,6 @@
                     if ([self.delegate respondsToSelector:@selector(imageManager:shouldBlockFailedURL:withError:)]) {
                         shouldBlockFailedURL = [self.delegate imageManager:self shouldBlockFailedURL:url withError:error];
                     } else {
-                        // 下载失败后判断是否应该讲 url 加入到黑名单
                         shouldBlockFailedURL = (   error.code != NSURLErrorNotConnectedToInternet
                                                 && error.code != NSURLErrorCancelled
                                                 && error.code != NSURLErrorTimedOut
@@ -239,20 +226,16 @@
                     }
                 }
                 else {
-                    // 从黑名单中移除
                     if ((options & SDWebImageRetryFailed)) {
                         LOCK(self.failedURLsLock);
                         [self.failedURLs removeObject:url];
                         UNLOCK(self.failedURLsLock);
                     }
-                    // 是否要存储到disk
+                    
                     BOOL cacheOnDisk = !(options & SDWebImageCacheMemoryOnly);
                     
                     // We've done the scale process in SDWebImageDownloader with the shared manager, this is used for custom manager and avoid extra scale.
-                    // 如果当前对象不是SDWebImageManager的单例对象，
-                    // 并且设置里过滤链接代码块，
                     if (self != [SDWebImageManager sharedManager] && self.cacheKeyFilter && downloadedImage) {
-                        // 并且下载到了图片。就进行缩放
                         downloadedImage = [self scaledImageForKey:key image:downloadedImage];
                     }
 
@@ -271,18 +254,15 @@
                                 } else {
                                     cacheData = (imageWasTransformed ? nil : downloadedData);
                                 }
-                                // 缓存下载的图片
                                 [self.imageCache storeImage:transformedImage imageData:cacheData forKey:key toDisk:cacheOnDisk completion:nil];
                             }
                             
                             [self callCompletionBlockForOperation:strongSubOperation completion:completedBlock image:transformedImage data:downloadedData error:nil cacheType:SDImageCacheTypeNone finished:finished url:url];
                         });
                     } else {
-                        // 下载成功，回调并且缓存
                         if (downloadedImage && finished) {
                             if (self.cacheSerializer) {
                                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-                                    // 如果对data有额外的处理，处理完后返回data在缓存
                                     NSData *cacheData = self.cacheSerializer(downloadedImage, downloadedData, url);
                                     [self.imageCache storeImage:downloadedImage imageData:cacheData forKey:key toDisk:cacheOnDisk completion:nil];
                                 });
@@ -290,7 +270,6 @@
                                 [self.imageCache storeImage:downloadedImage imageData:downloadedData forKey:key toDisk:cacheOnDisk completion:nil];
                             }
                         }
-                        // 完成回调
                         [self callCompletionBlockForOperation:strongSubOperation completion:completedBlock image:downloadedImage data:downloadedData error:nil cacheType:SDImageCacheTypeNone finished:finished url:url];
                     }
                 }
@@ -374,15 +353,12 @@
     @synchronized(self) {
         self.cancelled = YES;
         if (self.cacheOperation) {
-            // 可以还没被执行，然后轮到ioQueue队列执行查找disk的缓存的时候，能够及时的退出
             [self.cacheOperation cancel];
             self.cacheOperation = nil;
         }
         if (self.downloadToken) {
-            // 可以将回调(完成和进度)从下载的operation对象回调数组中移除，当下载的operation对象发现当前已经没有任何的回调了，就真正的取消网络请求
             [self.manager.imageDownloader cancel:self.downloadToken];
         }
-        // 删除
         [self.manager safelyRemoveOperationFromRunning:self];
     }
 }

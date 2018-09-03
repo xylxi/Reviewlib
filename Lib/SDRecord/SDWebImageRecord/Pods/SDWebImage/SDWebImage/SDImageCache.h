@@ -32,13 +32,11 @@ typedef NS_OPTIONS(NSUInteger, SDImageCacheOptions) {
     SDImageCacheQueryDataWhenInMemory = 1 << 0,
     /**
      * By default, we query the memory cache synchronously, disk cache asynchronously. This mask can force to query disk cache synchronously.
-     * 支持读取缓存的操作是同步操作
      */
     SDImageCacheQueryDiskSync = 1 << 1,
     /**
      * By default, images are decoded respecting their original size. On iOS, this flag will scale down the
      * images to a size compatible with the constrained memory of devices.
-     * 默认是按正常大小解码，设置该选项，会解码缩放的图片
      */
     SDImageCacheScaleDownLargeImages = 1 << 2
 };

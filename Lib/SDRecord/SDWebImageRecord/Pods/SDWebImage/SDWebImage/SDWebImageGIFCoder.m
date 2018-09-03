@@ -41,12 +41,11 @@
     [animatedImage addRepresentation:imageRep];
     return animatedImage;
 #else
-    // 生成图像源对象
+    
     CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
     if (!source) {
         return nil;
     }
-    // 获取子图片数量
     size_t count = CGImageSourceGetCount(source);
     
     UIImage *animatedImage;
@@ -54,41 +53,33 @@
     if (count <= 1) {
         animatedImage = [[UIImage alloc] initWithData:data];
     } else {
-        // 帧数组
         NSMutableArray<SDWebImageFrame *> *frames = [NSMutableArray array];
         
         for (size_t i = 0; i < count; i++) {
-            // 获取指定位置图片
             CGImageRef imageRef = CGImageSourceCreateImageAtIndex(source, i, NULL);
             if (!imageRef) {
                 continue;
             }
-            // 获取当前图片停留的时长
+            
             float duration = [self sd_frameDurationAtIndex:i source:source];
             UIImage *image = [[UIImage alloc] initWithCGImage:imageRef];
-            // 释放 imageRef
             CGImageRelease(imageRef);
-            // 生成帧
+            
             SDWebImageFrame *frame = [SDWebImageFrame frameWithImage:image duration:duration];
-            // 保存到帧数组
             [frames addObject:frame];
         }
-        //
+        
         NSUInteger loopCount = 1;
-        // 图片属性
         NSDictionary *imageProperties = (__bridge_transfer NSDictionary *)CGImageSourceCopyProperties(source, nil);
-        // 图片属性中的GIT属性
         NSDictionary *gifProperties = [imageProperties valueForKey:(__bridge NSString *)kCGImagePropertyGIFDictionary];
         if (gifProperties) {
             NSNumber *gifLoopCount = [gifProperties valueForKey:(__bridge NSString *)kCGImagePropertyGIFLoopCount];
             if (gifLoopCount != nil) {
-                // 获取GIF循环次数
                 loopCount = gifLoopCount.unsignedIntegerValue;
             }
         }
-        // 从帧数组中获取 image 数组
+        
         animatedImage = [SDWebImageCoderHelper animatedImageWithFrames:frames];
-        // 设置动图对象的循环次数
         animatedImage.sd_imageLoopCount = loopCount;
         animatedImage.sd_imageFormat = SDImageFormatGIF;
     }
@@ -99,9 +90,6 @@
 #endif
 }
 
-/**
- * 获取帧的显示时长
- */
 - (float)sd_frameDurationAtIndex:(NSUInteger)index source:(CGImageSourceRef)source {
     float frameDuration = 0.1f;
     CFDictionaryRef cfFrameProperties = CGImageSourceCopyPropertiesAtIndex(source, index, nil);
@@ -146,11 +134,6 @@
     return (format == SDImageFormatGIF);
 }
 
-/**
- * 1. 可变数据
- * 2. 图片类型
- * 3. 图片动态属性
- */
 - (NSData *)encodedDataWithImage:(UIImage *)image format:(SDImageFormat)format {
     if (!image) {
         return nil;
@@ -175,13 +158,11 @@
         CGImageDestinationAddImage(imageDestination, image.CGImage, nil);
     } else {
         // for animated GIF images
-        // 设置动态图的属性
         NSUInteger loopCount = image.sd_imageLoopCount;
         NSDictionary *gifProperties = @{(__bridge NSString *)kCGImagePropertyGIFDictionary: @{(__bridge NSString *)kCGImagePropertyGIFLoopCount : @(loopCount)}};
         CGImageDestinationSetProperties(imageDestination, (__bridge CFDictionaryRef)gifProperties);
         
         for (size_t i = 0; i < frames.count; i++) {
-            // 将每个图片添加到目的地
             SDWebImageFrame *frame = frames[i];
             float frameDuration = frame.duration;
             CGImageRef frameImageRef = frame.image.CGImage;

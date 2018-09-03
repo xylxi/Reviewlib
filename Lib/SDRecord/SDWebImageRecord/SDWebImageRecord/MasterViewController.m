@@ -7,8 +7,8 @@
  */
 
 #import "MasterViewController.h"
-//#import "DetailViewController.h"
-//#import <SDWebImage/FLAnimatedImageView+WebCache.h>
+#import "DetailViewController.h"
+#import <SDWebImage/FLAnimatedImageView+WebCache.h>
 #import <SDWebImage/UIView+WebCache.h>
 #import <UIView+WebCache.h>
 #import <UIImageView+WebCache.h>
@@ -16,9 +16,7 @@
 @interface MyCustomTableViewCell : UITableViewCell
 
 @property (nonatomic, strong) UILabel *customTextLabel;
-//@property (nonatomic, strong) FLAnimatedImageView *customImageView;
-
-@property (nonatomic, strong) UIImageView *customImageView;
+@property (nonatomic, strong) FLAnimatedImageView *customImageView;
 
 @end
 
@@ -26,7 +24,7 @@
 
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
-        _customImageView = [[UIImageView alloc] initWithFrame:CGRectMake(20.0, 2.0, 60.0, 40.0)];
+        _customImageView = [[FLAnimatedImageView alloc] initWithFrame:CGRectMake(20.0, 2.0, 60.0, 40.0)];
         [self.contentView addSubview:_customImageView];
         _customTextLabel = [[UILabel alloc] initWithFrame:CGRectMake(100.0, 12.0, 200, 20.0)];
         [self.contentView addSubview:_customTextLabel];
@@ -63,13 +61,13 @@
     
     self.objects = [NSMutableArray arrayWithObjects:
                     @"http://www.httpwatch.com/httpgallery/authentication/authenticatedimage/default.aspx?0.35786508303135633",     // requires HTTP auth, used to demo the NTLM auth
-//                    @"http://assets.sbnation.com/assets/2512203/dogflops.gif",
+                    @"http://assets.sbnation.com/assets/2512203/dogflops.gif",
                     @"https://raw.githubusercontent.com/liyong03/YLGIFImage/master/YLGIFImageDemo/YLGIFImageDemo/joy.gif",
-//                    @"http://www.ioncannon.net/wp-content/uploads/2011/06/test2.webp",
-//                    @"http://www.ioncannon.net/wp-content/uploads/2011/06/test9.webp",
-//                    @"http://littlesvr.ca/apng/images/SteamEngine.webp",
-//                    @"http://littlesvr.ca/apng/images/world-cup-2014-42.webp",
-//                    @"https://isparta.github.io/compare-webp/image/gif_webp/webp/2.webp",
+                    @"http://www.ioncannon.net/wp-content/uploads/2011/06/test2.webp",
+                    @"http://www.ioncannon.net/wp-content/uploads/2011/06/test9.webp",
+                    @"http://littlesvr.ca/apng/images/SteamEngine.webp",
+                    @"http://littlesvr.ca/apng/images/world-cup-2014-42.webp",
+                    @"https://isparta.github.io/compare-webp/image/gif_webp/webp/2.webp",
                     @"https://nokiatech.github.io/heif/content/images/ski_jump_1440x960.heic",
                     @"https://nr-platform.s3.amazonaws.com/uploads/platform/published_extension/branding_icon/275/AmazonS3.png",
                     @"http://via.placeholder.com/200x200.jpg",
@@ -122,26 +120,26 @@
         cell.customImageView.sd_imageTransition = SDWebImageTransition.fadeTransition;
     }
 
-//    [cell.customImageView sd_setShowActivityIndicatorView:YES];
-//    [cell.customImageView sd_setIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    [cell.customImageView sd_setShowActivityIndicatorView:YES];
+    [cell.customImageView sd_setIndicatorStyle:UIActivityIndicatorViewStyleGray];
     
     cell.customTextLabel.text = [NSString stringWithFormat:@"Image #%ld", (long)indexPath.row];
-    [cell.customImageView sd_setImageWithURL:[NSURL URLWithString:self.objects[indexPath.row]] placeholderImage:placeholderImage options:indexPath.row == 0 ? SDWebImageRefreshCached : 0 completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
-        
-    }];
-//    [cell.customImageView sd_setImageWithURL:[NSURL URLWithString:self.objects[indexPath.row]]
-//                            placeholderImage:placeholderImage
-//                                     options:indexPath.row == 0 ? SDWebImageRefreshCached : 0];
+//    [cell.customImageView sd_setImageWithURL:[NSURL URLWithString:self.objects[indexPath.row]] placeholderImage:placeholderImage options:indexPath.row == 0 ? SDWebImageRefreshCached : 0 completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
+//
+//    }];
+    [cell.customImageView sd_setImageWithURL:[NSURL URLWithString:self.objects[indexPath.row]]
+                            placeholderImage:placeholderImage
+                                     options:indexPath.row == 0 ? SDWebImageRefreshCached : 0];
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-//    NSString *largeImageURLString = [self.objects[indexPath.row] stringByReplacingOccurrencesOfString:@"small" withString:@"source"];
-//    NSURL *largeImageURL = [NSURL URLWithString:largeImageURLString];
-//    DetailViewController *detailViewController = [[DetailViewController alloc] initWithNibName:@"DetailViewController" bundle:nil];
-//    detailViewController.imageURL = largeImageURL;
-//    [self.navigationController pushViewController:detailViewController animated:YES];
+    NSString *largeImageURLString = [self.objects[indexPath.row] stringByReplacingOccurrencesOfString:@"small" withString:@"source"];
+    NSURL *largeImageURL = [NSURL URLWithString:largeImageURLString];
+    DetailViewController *detailViewController = [[DetailViewController alloc] initWithNibName:@"DetailViewController" bundle:nil];
+    detailViewController.imageURL = largeImageURL;
+    [self.navigationController pushViewController:detailViewController animated:YES];
 }
 
 @end
