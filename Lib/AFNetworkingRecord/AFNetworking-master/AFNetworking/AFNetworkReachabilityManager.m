@@ -219,11 +219,14 @@ static void AFNetworkReachabilityReleaseCallback(const void *info) {
         }
 
     };
-
+    // 生成网络监控上下文
     SCNetworkReachabilityContext context = {0, (__bridge void *)callback, AFNetworkReachabilityRetainCallback, AFNetworkReachabilityReleaseCallback, NULL};
+    // 设置网络监控回调
     SCNetworkReachabilitySetCallback(self.networkReachability, AFNetworkReachabilityCallback, &context);
+    // 放到运行循环中
     SCNetworkReachabilityScheduleWithRunLoop(self.networkReachability, CFRunLoopGetMain(), kCFRunLoopCommonModes);
 
+    // 在全局并发队列中异步监听SCNetworkReachabilityRef对象的网络状态，如果发生变化则进行回调和发送通知
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0),^{
         SCNetworkReachabilityFlags flags;
         if (SCNetworkReachabilityGetFlags(self.networkReachability, &flags)) {

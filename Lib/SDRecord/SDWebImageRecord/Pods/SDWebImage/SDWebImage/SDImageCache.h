@@ -141,6 +141,7 @@ typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger tot
  * @param imageData       The image data as returned by the server, this representation will be used for disk storage
  *                        instead of converting the given image object into a storable/compressed image format in order
  *                        to save quality and CPU
+ * 由服务器返回的图像数据，该表示将用于磁盘存储，而不是将给定的图像对象转换为可存储/压缩的图像格式，以节省质量和CPU。
  * @param key             The unique image cache key, usually it's image absolute URL
  * @param toDisk          Store the image to disk cache if YES
  * @param completionBlock A block executed after the operation is finished

@@ -41,7 +41,9 @@
 @property (nonatomic, strong) id body;
 @property (nonatomic, assign) NSUInteger bodyContentLength;
 @property (nonatomic, strong) NSInputStream *inputStream;
+// 开头bodyPart
 @property (nonatomic, assign) BOOL hasInitialBoundary;
+// 结尾bodyPart
 @property (nonatomic, assign) BOOL hasFinalBoundary;
 @property (readonly, nonatomic, assign, getter = hasBytesAvailable) BOOL bytesAvailable;
 @property (readonly, nonatomic, assign) NSUInteger contentLength;

@@ -18,12 +18,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+// https://www.jianshu.com/p/31bcddf44b8d
 
 #import "AFSecurityPolicy.h"
 
 #import <AssertMacros.h>
 
 #if !TARGET_OS_IOS && !TARGET_OS_WATCH && !TARGET_OS_TV
+// 这个方法是将key转为NSData类型
 static NSData * AFSecKeyGetData(SecKeyRef key) {
     CFDataRef data = NULL;
 
@@ -48,6 +50,7 @@ static BOOL AFSecKeyIsEqualToKey(SecKeyRef key1, SecKeyRef key2) {
 #endif
 }
 
+// 从证书中取出公钥
 static id AFPublicKeyForCertificate(NSData *certificate) {
     id allowedPublicKey = nil;
     SecCertificateRef allowedCertificate;
@@ -80,6 +83,7 @@ _out:
     return allowedPublicKey;
 }
 
+// 这个方法是判断服务器是否可以信任
 static BOOL AFServerTrustIsValid(SecTrustRef serverTrust) {
     BOOL isValid = NO;
     SecTrustResultType result;
@@ -91,6 +95,7 @@ _out:
     return isValid;
 }
 
+// 这个方法是用来获得服务器返回的所有的证书
 static NSArray * AFCertificateTrustChainForServerTrust(SecTrustRef serverTrust) {
     CFIndex certificateCount = SecTrustGetCertificateCount(serverTrust);
     NSMutableArray *trustChain = [NSMutableArray arrayWithCapacity:(NSUInteger)certificateCount];
@@ -103,6 +108,7 @@ static NSArray * AFCertificateTrustChainForServerTrust(SecTrustRef serverTrust) 
     return [NSArray arrayWithArray:trustChain];
 }
 
+// 这个方法是用来获得服务器返回的所有的证书中的公钥
 static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
     SecPolicyRef policy = SecPolicyCreateBasicX509();
     CFIndex certificateCount = SecTrustGetCertificateCount(serverTrust);
@@ -141,6 +147,7 @@ static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
 
 @interface AFSecurityPolicy()
 @property (readwrite, nonatomic, assign) AFSSLPinningMode SSLPinningMode;
+// 保存证书中的公钥集合
 @property (readwrite, nonatomic, strong) NSSet *pinnedPublicKeys;
 @end
 
@@ -203,6 +210,7 @@ static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
 - (void)setPinnedCertificates:(NSSet *)pinnedCertificates {
     _pinnedCertificates = pinnedCertificates;
 
+    // 如果设置了证书，就取出证书中的公钥并保存
     if (self.pinnedCertificates) {
         NSMutableSet *mutablePinnedPublicKeys = [NSMutableSet setWithCapacity:[self.pinnedCertificates count]];
         for (NSData *certificate in self.pinnedCertificates) {
@@ -223,6 +231,7 @@ static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
 - (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust
                   forDomain:(NSString *)domain
 {
+    // 当使用自建证书验证域名时，必须使用AFSSLPinningModePublicKey或者AFSSLPinningModeCertificate进行验证
     if (domain && self.allowInvalidCertificates && self.validatesDomainName && (self.SSLPinningMode == AFSSLPinningModeNone || [self.pinnedCertificates count] == 0)) {
         // https://developer.apple.com/library/mac/documentation/NetworkingInternet/Conceptual/NetworkingTopics/Articles/OverridingSSLChainValidationCorrectly.html
         //  According to the docs, you should only trust your provided certs for evaluation.
@@ -236,6 +245,7 @@ static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
         return NO;
     }
 
+    // 如果需要验证域名就添加一个验证域名的策略
     NSMutableArray *policies = [NSMutableArray array];
     if (self.validatesDomainName) {
         [policies addObject:(__bridge_transfer id)SecPolicyCreateSSL(true, (__bridge CFStringRef)domain)];
@@ -243,14 +253,23 @@ static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
         [policies addObject:(__bridge_transfer id)SecPolicyCreateBasicX509()];
     }
 
+    // 添加安全策略，为serverTrust设置验证策略，即告诉客户端如何验证serverTrust
     SecTrustSetPolicies(serverTrust, (__bridge CFArrayRef)policies);
 
+    // 如果验证策略为不验证
     if (self.SSLPinningMode == AFSSLPinningModeNone) {
+        // 如果信任无效或者过期证书则直接通过验证，否则根绝验证证书情况返回
         return self.allowInvalidCertificates || AFServerTrustIsValid(serverTrust);
     } else if (!AFServerTrustIsValid(serverTrust) && !self.allowInvalidCertificates) {
         return NO;
     }
 
+    /**
+     当代码走到这儿的时候代表：
+     1.有验证策略
+     2.证书验证通过
+     3.不信任无效或者过期证书
+     */
     switch (self.SSLPinningMode) {
         case AFSSLPinningModeNone:
         default:

@@ -146,14 +146,18 @@ typedef void (^AFURLSessionTaskCompletionHandler)(NSURLResponse *response, id re
     _downloadProgress = [[NSProgress alloc] initWithParent:nil userInfo:nil];
     
     __weak __typeof__(task) weakTask = task;
+    // 关于progress的资料 https://www.jianshu.com/p/239084afda5c
     for (NSProgress *progress in @[ _uploadProgress, _downloadProgress ])
     {
+        // totalUnitCount 总单元
         progress.totalUnitCount = NSURLSessionTransferSizeUnknown;
         progress.cancellable = YES;
+        // 进度取消回调
         progress.cancellationHandler = ^{
             [weakTask cancel];
         };
         progress.pausable = YES;
+        // 进度暂停回调
         progress.pausingHandler = ^{
             [weakTask suspend];
         };
@@ -167,7 +171,7 @@ typedef void (^AFURLSessionTaskCompletionHandler)(NSURLResponse *response, id re
                 [weakTask resume];
             };
         }
-        
+        // fractionCompleted 某个任务已完成单元量占总单元量的比例，用于观察进度
         [progress addObserver:self
                    forKeyPath:NSStringFromSelector(@selector(fractionCompleted))
                       options:NSKeyValueObservingOptionNew
@@ -197,7 +201,7 @@ typedef void (^AFURLSessionTaskCompletionHandler)(NSURLResponse *response, id re
 }
 
 #pragma mark - NSURLSessionTaskDelegate
-
+// 请求完成回调的方法(不管是get、下载、上传)
 - (void)URLSession:(__unused NSURLSession *)session
               task:(NSURLSessionTask *)task
 didCompleteWithError:(NSError *)error
@@ -231,7 +235,7 @@ didCompleteWithError:(NSError *)error
         userInfo[AFNetworkingTaskDidCompleteResponseDataKey] = data;
     }
 
-    if (error) {
+    if (error) { // 请求失败
         userInfo[AFNetworkingTaskDidCompleteErrorKey] = error;
 
         dispatch_group_async(manager.completionGroup ?: url_session_manager_completion_group(), manager.completionQueue ?: dispatch_get_main_queue(), ^{
@@ -243,12 +247,14 @@ didCompleteWithError:(NSError *)error
                 [[NSNotificationCenter defaultCenter] postNotificationName:AFNetworkingTaskDidCompleteNotification object:task userInfo:userInfo];
             });
         });
-    } else {
+    } else { // 请求成功
         dispatch_async(url_session_manager_processing_queue(), ^{
             NSError *serializationError = nil;
+            // 将 data 反序列化
             responseObject = [manager.responseSerializer responseObjectForResponse:task.response data:data error:&serializationError];
 
             if (self.downloadFileURL) {
+                // 如果是download，那么返回的是文件路径
                 responseObject = self.downloadFileURL;
             }
 
@@ -266,6 +272,7 @@ didCompleteWithError:(NSError *)error
                 }
 
                 dispatch_async(dispatch_get_main_queue(), ^{
+                    // 每次请求成功，都会发通知
                     [[NSNotificationCenter defaultCenter] postNotificationName:AFNetworkingTaskDidCompleteNotification object:task userInfo:userInfo];
                 });
             });
@@ -303,7 +310,10 @@ totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend{
 }
 
 #pragma mark - NSURLSessionDownloadDelegate
-
+//当接收到下载数据的时候调用,可以在该方法中监听文件下载的进度该方法会被调用多次
+//totalBytesWritten:已经写入到文件中的数据大小
+//totalBytesExpectedToWrite:目前文件的总大小
+//bytesWritten:本次下载的文件数据大小
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
       didWriteData:(int64_t)bytesWritten
  totalBytesWritten:(int64_t)totalBytesWritten
@@ -313,6 +323,9 @@ totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite{
     self.downloadProgress.completedUnitCount = totalBytesWritten;
 }
 
+//恢复下载的时候调用该方法
+//fileOffset:恢复之后，要从文件的什么地方开发下载
+//expectedTotalBytes：该文件数据的总大小
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
  didResumeAtOffset:(int64_t)fileOffset
 expectedTotalBytes:(int64_t)expectedTotalBytes{
@@ -321,17 +334,28 @@ expectedTotalBytes:(int64_t)expectedTotalBytes{
     self.downloadProgress.completedUnitCount = fileOffset;
 }
 
+static AFURLSessionDownloadTaskDidFinishDownloadingBlock extracted(AFURLSessionManagerTaskDelegate *object) {
+    return object.downloadTaskDidFinishDownloading;
+}
+
+
+/*
+ 2.下载完成
+    downloadTask:里面包含请求信息，以及响应信息
+    location：下载后自动帮我保存的地址
+ */
 - (void)URLSession:(NSURLSession *)session
       downloadTask:(NSURLSessionDownloadTask *)downloadTask
 didFinishDownloadingToURL:(NSURL *)location
 {
     self.downloadFileURL = nil;
 
-    if (self.downloadTaskDidFinishDownloading) {
+    if (extracted(self)) {
+        // 移动文件
         self.downloadFileURL = self.downloadTaskDidFinishDownloading(session, downloadTask, location);
         if (self.downloadFileURL) {
             NSError *fileManagerError = nil;
-
+            // 将下载的文件移动到指定的路径
             if (![[NSFileManager defaultManager] moveItemAtURL:location toURL:self.downloadFileURL error:&fileManagerError]) {
                 [[NSNotificationCenter defaultCenter] postNotificationName:AFURLSessionDownloadTaskDidFailToMoveFileNotification object:downloadTask userInfo:fileManagerError.userInfo];
             }
@@ -959,7 +983,8 @@ static NSString * const AFNSURLSessionTaskDidSuspendNotification = @"com.alamofi
 }
 
 #pragma mark - NSURLSessionDelegate
-
+// 当 session 无效的时候，会调用这个方法
+// [session finishTasksAndInvalidate]
 - (void)URLSession:(NSURLSession *)session
 didBecomeInvalidWithError:(NSError *)error
 {
@@ -970,6 +995,7 @@ didBecomeInvalidWithError:(NSError *)error
     [[NSNotificationCenter defaultCenter] postNotificationName:AFURLSessionDidInvalidateNotification object:session];
 }
 
+// 认证相关 TODO
 - (void)URLSession:(NSURLSession *)session
 didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
  completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler
@@ -980,6 +1006,8 @@ didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
     if (self.sessionDidReceiveAuthenticationChallenge) {
         disposition = self.sessionDidReceiveAuthenticationChallenge(session, challenge, &credential);
     } else {
+        // 1.从服务器返回的受保护空间中拿到证书的类型
+        // 2.判断服务器返回的证书是否是服务器信任的
         if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust]) {
             if ([self.securityPolicy evaluateServerTrust:challenge.protectionSpace.serverTrust forDomain:challenge.protectionSpace.host]) {
                 credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
@@ -1003,6 +1031,7 @@ didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
 
 #pragma mark - NSURLSessionTaskDelegate
 
+// 当一个HTTP请求试图执行重定向到一个不同的URL时，会调用这个代理方法
 - (void)URLSession:(NSURLSession *)session
               task:(NSURLSessionTask *)task
 willPerformHTTPRedirection:(NSHTTPURLResponse *)response
@@ -1020,6 +1049,7 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
     }
 }
 
+// 当task接收到身份验证时，会调用这个代理方法。这个证书验证的处理方式和上面那个一模一样，只不过上面那个是session级别的，这个是task级别的
 - (void)URLSession:(NSURLSession *)session
               task:(NSURLSessionTask *)task
 didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
@@ -1048,6 +1078,15 @@ didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
     }
 }
 
+/**
+ * 当使用 POST 请求的时候，可以通过三种方式提供 Body 的内容
+ * 1. 使用NSData
+ * 2. 使用文件
+ * 3. 使用数据流
+ * dis 如果通过数据流来提供请求的主体，则必须声明自定义的会话代理。并且实现
+       uploadTaskWithStreamedRequest
+ TODO
+ */
 - (void)URLSession:(NSURLSession *)session
               task:(NSURLSessionTask *)task
  needNewBodyStream:(void (^)(NSInputStream *bodyStream))completionHandler
@@ -1057,6 +1096,7 @@ didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
     if (self.taskNeedNewBodyStream) {
         inputStream = self.taskNeedNewBodyStream(session, task);
     } else if (task.originalRequest.HTTPBodyStream && [task.originalRequest.HTTPBodyStream conformsToProtocol:@protocol(NSCopying)]) {
+        // 使用 task 的源输入流
         inputStream = [task.originalRequest.HTTPBodyStream copy];
     }
 
@@ -1065,6 +1105,9 @@ didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
     }
 }
 
+/**
+ * 来捕获上传的进度信息
+ */
 - (void)URLSession:(NSURLSession *)session
               task:(NSURLSessionTask *)task
    didSendBodyData:(int64_t)bytesSent

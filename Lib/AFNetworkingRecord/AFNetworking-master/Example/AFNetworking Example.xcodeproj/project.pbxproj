@@ -41,6 +41,8 @@
 		29E6F1F41BB9E37200A4466C /* iOS Today Extension Example.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 29E6F1E61BB9E37200A4466C /* iOS Today Extension Example.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		29E6F1F91BB9E56200A4466C /* Post.m in Sources */ = {isa = PBXBuildFile; fileRef = 29E6F19A1BB9DD7300A4466C /* Post.m */; };
 		29E6F1FA1BB9E56500A4466C /* User.m in Sources */ = {isa = PBXBuildFile; fileRef = 29E6F19C1BB9DD7300A4466C /* User.m */; };
+		6F2A40E5213FF12000A518EB /* avatar.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6F2A40E4213FF12000A518EB /* avatar.jpg */; };
+		6F2A40E72140E69D00A518EB /* avatar2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6F2A40E62140E69D00A518EB /* avatar2.jpg */; };
 		C2BFE0251C11870800BB258D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C2BFE0241C11870800BB258D /* AppDelegate.m */; };
 		C2BFE0281C11872D00BB258D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C2BFE0271C11872D00BB258D /* AppDelegate.m */; };
 /* End PBXBuildFile section */
@@ -153,6 +155,8 @@
 		29E6F2231BB9E76A00A4466C /* ExtensionDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ExtensionDelegate.m; sourceTree = "<group>"; };
 		29E6F2251BB9E76A00A4466C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		29E6F2271BB9E76B00A4466C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6F2A40E4213FF12000A518EB /* avatar.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = avatar.jpg; sourceTree = "<group>"; };
+		6F2A40E62140E69D00A518EB /* avatar2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = avatar2.jpg; sourceTree = "<group>"; };
 		C2BFE0231C11870800BB258D /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		C2BFE0241C11870800BB258D /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		C2BFE0261C11872D00BB258D /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -229,6 +233,8 @@
 		291BFE071BB9EB3400FFB029 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				6F2A40E62140E69D00A518EB /* avatar2.jpg */,
+				6F2A40E4213FF12000A518EB /* avatar.jpg */,
 				291BFE081BB9EB3400FFB029 /* GlobalTimelineViewController.h */,
 				291BFE091BB9EB3400FFB029 /* GlobalTimelineViewController.m */,
 			);
@@ -585,6 +591,8 @@
 			files = (
 				29E6F1AC1BB9DDB600A4466C /* Assets.xcassets in Resources */,
 				29E6F1E11BB9E03600A4466C /* Launchscreen.storyboard in Resources */,
+				6F2A40E5213FF12000A518EB /* avatar.jpg in Resources */,
+				6F2A40E72140E69D00A518EB /* avatar2.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

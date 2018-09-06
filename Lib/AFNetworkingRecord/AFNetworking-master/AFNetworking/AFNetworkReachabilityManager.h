@@ -27,7 +27,7 @@
 typedef NS_ENUM(NSInteger, AFNetworkReachabilityStatus) {
     AFNetworkReachabilityStatusUnknown          = -1,
     AFNetworkReachabilityStatusNotReachable     = 0,
-    AFNetworkReachabilityStatusReachableViaWWAN = 1,
+    AFNetworkReachabilityStatusReachableViaWWAN = 1, // 蜂窝
     AFNetworkReachabilityStatusReachableViaWiFi = 2,
 };
 

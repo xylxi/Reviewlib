@@ -57,10 +57,40 @@
     self.refreshControl = [[UIRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.tableView.frame.size.width, 100.0f)];
     [self.refreshControl addTarget:self action:@selector(reload:) forControlEvents:UIControlEventValueChanged];
     [self.tableView.tableHeaderView addSubview:self.refreshControl];
-
     self.tableView.rowHeight = 70.0f;
-    
     [self reload:nil];
+    
+    
+    /* 文件下载
+    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
+    AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:configuration];
+    
+    NSURL *URL = [NSURL URLWithString:@"https://codeload.github.com/ibireme/YYKit/zip/master"];
+    NSURLRequest *request = [NSURLRequest requestWithURL:URL];
+    
+    NSURLSessionDownloadTask *downloadTask = [manager downloadTaskWithRequest:request progress:^(NSProgress * _Nonnull downloadProgress) {
+        NSLog(@"progress = %@",downloadProgress.localizedDescription);
+    } destination:^NSURL *(NSURL *targetPath, NSURLResponse *response) {
+        NSURL *documentsDirectoryURL = [[NSFileManager defaultManager] URLForDirectory:NSDocumentDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:NO error:nil];
+        return [documentsDirectoryURL URLByAppendingPathComponent:[response suggestedFilename]];
+    } completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *error) {
+        NSLog(@"File downloaded to: %@", filePath);
+    }];
+    
+    [downloadTask resume];
+    */
+    
+    /* 了解多表单上传
+    request = [[AFHTTPRequestSerializer serializer] multipartFormRequestWithMethod:@"POST" URLString:@"http://larabbs.test/users.update" parameters:@{@"name":@"sss",@"email":@"sss@qq.com"} constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
+        NSURL *url = [[NSBundle mainBundle] URLForResource:@"avatar2" withExtension:@"jpg"];
+        [formData appendPartWithFileURL:url name:@"avatar" error:nil];
+    } error:nil];
+    
+    [[manager uploadTaskWithStreamedRequest:request progress:nil completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
+        NSLog(@"%@",error);
+    }] resume];
+     */
+    
 }
 
 #pragma mark - UITableViewDataSource
