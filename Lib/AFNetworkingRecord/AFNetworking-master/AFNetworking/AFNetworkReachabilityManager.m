@@ -33,6 +33,9 @@ NSString * const AFNetworkingReachabilityNotificationStatusItem = @"AFNetworking
 
 typedef void (^AFNetworkReachabilityStatusBlock)(AFNetworkReachabilityStatus status);
 
+/**
+ 获取网络状态的描述
+ */
 NSString * AFStringFromNetworkReachabilityStatus(AFNetworkReachabilityStatus status) {
     switch (status) {
         case AFNetworkReachabilityStatusNotReachable:
@@ -47,15 +50,24 @@ NSString * AFStringFromNetworkReachabilityStatus(AFNetworkReachabilityStatus sta
     }
 }
 
+/**
+ 根据 flags 获取到网络状态
+ */
 static AFNetworkReachabilityStatus AFNetworkReachabilityStatusForFlags(SCNetworkReachabilityFlags flags) {
+    // 可到达
     BOOL isReachable = ((flags & kSCNetworkReachabilityFlagsReachable) != 0);
+    // 需要连接
     BOOL needsConnection = ((flags & kSCNetworkReachabilityFlagsConnectionRequired) != 0);
+    // 能够自动连接
     BOOL canConnectionAutomatically = (((flags & kSCNetworkReachabilityFlagsConnectionOnDemand ) != 0) || ((flags & kSCNetworkReachabilityFlagsConnectionOnTraffic) != 0));
+    // 用户设置能连接网
     BOOL canConnectWithoutUserInteraction = (canConnectionAutomatically && (flags & kSCNetworkReachabilityFlagsInterventionRequired) == 0);
+    // 判断能否联网
     BOOL isNetworkReachable = (isReachable && (!needsConnection || canConnectWithoutUserInteraction));
 
     AFNetworkReachabilityStatus status = AFNetworkReachabilityStatusUnknown;
     if (isNetworkReachable == NO) {
+        // 无连接
         status = AFNetworkReachabilityStatusNotReachable;
     }
 #if	TARGET_OS_IPHONE
@@ -77,6 +89,7 @@ static AFNetworkReachabilityStatus AFNetworkReachabilityStatusForFlags(SCNetwork
  * as they are sent. If notifications are sent directly, it is possible that
  * a queued notification (for an earlier status condition) is processed after
  * the later update, resulting in the listener being left in the wrong state.
+ * 统一在主线程中调用 block 和发通知
  */
 static void AFPostReachabilityStatusChange(SCNetworkReachabilityFlags flags, AFNetworkReachabilityStatusBlock block) {
     AFNetworkReachabilityStatus status = AFNetworkReachabilityStatusForFlags(flags);
@@ -90,6 +103,9 @@ static void AFPostReachabilityStatusChange(SCNetworkReachabilityFlags flags, AFN
     });
 }
 
+/**
+ 网络变化后，调用上面的接口
+ */
 static void AFNetworkReachabilityCallback(SCNetworkReachabilityRef __unused target, SCNetworkReachabilityFlags flags, void *info) {
     AFPostReachabilityStatusChange(flags, (__bridge AFNetworkReachabilityStatusBlock)info);
 }
@@ -210,6 +226,7 @@ static void AFNetworkReachabilityReleaseCallback(const void *info) {
     }
 
     __weak __typeof(self)weakSelf = self;
+    // 在全局并发队列中异步监听SCNetworkReachabilityRef对象的网络状态，如果发生变化则进行回调和发送通
     AFNetworkReachabilityStatusBlock callback = ^(AFNetworkReachabilityStatus status) {
         __strong __typeof(weakSelf)strongSelf = weakSelf;
 

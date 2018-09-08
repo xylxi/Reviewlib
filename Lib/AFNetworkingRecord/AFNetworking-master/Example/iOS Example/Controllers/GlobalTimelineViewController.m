@@ -30,6 +30,7 @@
 
 @interface GlobalTimelineViewController ()
 @property (readwrite, nonatomic, strong) NSArray *posts;
+@property (nonatomic, strong) AFNetworkReachabilityManager *reachablility;
 @end
 
 @implementation GlobalTimelineViewController
@@ -58,13 +59,13 @@
     [self.refreshControl addTarget:self action:@selector(reload:) forControlEvents:UIControlEventValueChanged];
     [self.tableView.tableHeaderView addSubview:self.refreshControl];
     self.tableView.rowHeight = 70.0f;
-    [self reload:nil];
+//    [self reload:nil];
     
     
-    /* 文件下载
+    
     NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-    AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:configuration];
-    
+    AFHTTPSessionManager *manager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:configuration];
+    /* 文件下载
     NSURL *URL = [NSURL URLWithString:@"https://codeload.github.com/ibireme/YYKit/zip/master"];
     NSURLRequest *request = [NSURLRequest requestWithURL:URL];
     
@@ -80,6 +81,14 @@
     [downloadTask resume];
     */
     
+    /*
+    [manager POST:@"http://larabbs.test/user/test/" parameters:@{@"name":@"wang"} headers:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        
+    }];
+    */
+    
     /* 了解多表单上传
     request = [[AFHTTPRequestSerializer serializer] multipartFormRequestWithMethod:@"POST" URLString:@"http://larabbs.test/users.update" parameters:@{@"name":@"sss",@"email":@"sss@qq.com"} constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
         NSURL *url = [[NSBundle mainBundle] URLForResource:@"avatar2" withExtension:@"jpg"];
@@ -91,6 +100,12 @@
     }] resume];
      */
     
+    AFNetworkReachabilityManager *reachablility = [AFNetworkReachabilityManager managerForDomain:@"api.guazi.com"];
+    [reachablility setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+        NSLog(@"%@",AFStringFromNetworkReachabilityStatus(status));
+    }];
+    [reachablility startMonitoring];
+    self.reachablility = reachablility;
 }
 
 #pragma mark - UITableViewDataSource
