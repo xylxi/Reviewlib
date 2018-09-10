@@ -382,7 +382,7 @@ typedef NS_ENUM(NSUInteger, YYAnimatedImageType) {
 
 // dynamically adjust buffer size for current memory.
 - (void)calcMaxBufferCount {
-    // 没帧所占内存
+    // 每帧所占字节
     int64_t bytes = (int64_t)_curAnimatedImage.animatedImageBytesPerFrame;
     if (bytes == 0) bytes = 1024;
     // 内存大小
@@ -484,6 +484,7 @@ typedef NS_ENUM(NSUInteger, YYAnimatedImageType) {
     if (!_bufferMiss) {
         _time += link.duration;
         delay = [image animatedImageDurationAtIndex:_curIndex];
+        // 还没有超过该帧的显示时间，继续显示当前帧
         if (_time < delay) return;
         _time -= delay;
         if (nextIndex == 0) {
@@ -498,7 +499,8 @@ typedef NS_ENUM(NSUInteger, YYAnimatedImageType) {
         delay = [image animatedImageDurationAtIndex:nextIndex];
         if (_time > delay) _time = delay; // do not jump over frame
     }
-    LOCK(
+    dispatch_semaphore_wait(self->_lock, DISPATCH_TIME_FOREVER);
+//    LOCK(
          bufferedImage = buffer[@(nextIndex)];
          if (bufferedImage) {
              if ((int)_incrBufferCount < _totalFrameCount) {
@@ -520,7 +522,8 @@ typedef NS_ENUM(NSUInteger, YYAnimatedImageType) {
          } else {
              _bufferMiss = YES;
          }
-    )//LOCK
+//    )//LOCK
+    dispatch_semaphore_signal(self->_lock);
     
     if (!_bufferMiss) {
         [self.layer setNeedsDisplay]; // let system call `displayLayer:` before runloop sleep

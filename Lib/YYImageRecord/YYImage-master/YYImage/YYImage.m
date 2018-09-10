@@ -151,6 +151,7 @@ static CGFloat _NSStringPathScale(NSString *string) {
     if (scale <= 0) scale = [UIScreen mainScreen].scale;
     _preloadedLock = dispatch_semaphore_create(1);
     @autoreleasepool {
+        // decoder 解码器，记录者帧数组的信息
         YYImageDecoder *decoder = [YYImageDecoder decoderWithData:data scale:scale];
         // 取第一帧、并且解压缩 image
         YYImageFrame *frame = [decoder frameAtIndex:0 decodeForDisplay:YES];
@@ -162,6 +163,7 @@ static CGFloat _NSStringPathScale(NSString *string) {
         _animatedImageType = decoder.type;
         if (decoder.frameCount > 1) {
             _decoder = decoder;
+            // 一帧的字节数
             _bytesPerFrame = CGImageGetBytesPerRow(image.CGImage) * CGImageGetHeight(image.CGImage);
             _animatedImageMemorySize = _bytesPerFrame * decoder.frameCount;
         }

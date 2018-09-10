@@ -865,6 +865,7 @@ fail:
     return NO;
 }
 
+// 解码图片
 CGImageRef YYCGImageCreateDecodedCopy(CGImageRef imageRef, BOOL decodeForDisplay) {
     if (!imageRef) return NULL;
     size_t width = CGImageGetWidth(imageRef);
@@ -1634,11 +1635,12 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
     if (index >= _frames.count) return 0;
     _YYImageDecoderFrame *frame = [(_YYImageDecoderFrame *)_frames[index] copy];
     BOOL decoded = NO;
+    // 是否需要画布
     BOOL extendToCanvas = NO;
     if (_type != YYImageTypeICO && decodeForDisplay) { // ICO contains multi-size frame and should not extend to canvas.
         extendToCanvas = YES;
     }
-    
+    // blend 混合
     if (!_needBlend) {
         CGImageRef imageRef = [self _newUnblendedImageAtIndex:index extendToCanvas:extendToCanvas decoded:&decoded];
         if (!imageRef) return nil;
@@ -1972,7 +1974,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
         CGImageSourceUpdateData(_source, (__bridge CFDataRef)_data, _finalized);
     }
     if (!_source) return;
-    
+    // 获取 GIF 的帧数
     _frameCount = CGImageSourceGetCount(_source);
     if (_frameCount == 0) return;
     
@@ -1988,6 +1990,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
             if (properties) {
                 CFDictionaryRef gif = CFDictionaryGetValue(properties, kCGImagePropertyGIFDictionary);
                 if (gif) {
+                    // gif循环次数 0 为不限制
                     CFTypeRef loop = CFDictionaryGetValue(gif, kCGImagePropertyGIFLoopCount);
                     if (loop) CFNumberGetValue(loop, kCFNumberNSIntegerType, &_loopCount);
                 }
@@ -2009,6 +2012,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
         frame.isFullSize = YES;
         [frames addObject:frame];
         
+        // 第 i 帧图片的属性
         CFDictionaryRef properties = CGImageSourceCopyPropertiesAtIndex(_source, i, NULL);
         if (properties) {
 
@@ -2043,7 +2047,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
                 value = CFDictionaryGetValue(properties, kCGImagePropertyOrientation);
                 if (value) {
                     CFNumberGetValue(value, kCFNumberNSIntegerType, &orientationValue);
-                    // 记录图片的方向
+                    // 记录图片的方向，只记录一个就可以了
                     _orientation = YYUIImageOrientationFromEXIFValue(orientationValue);
                 }
             }
@@ -2064,8 +2068,10 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
     _YYImageDecoderFrame *frame = _frames[index];
     
     if (_source) {
+        // 获取索引的 CGimageRef 图片源
         CGImageRef imageRef = CGImageSourceCreateImageAtIndex(_source, index, (CFDictionaryRef)@{(id)kCGImageSourceShouldCache:@(YES)});
         if (imageRef && extendToCanvas) {
+            // 有图片数据源 并且 需要画布解码
             size_t width = CGImageGetWidth(imageRef);
             size_t height = CGImageGetHeight(imageRef);
             if (width == _width && height == _height) {

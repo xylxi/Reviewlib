@@ -45,8 +45,8 @@
 //    [self addImageWithName:@"niconiconi" text:@"Animated GIF"];
 //    [self addImageWithName:@"wall-e" text:@"Animated WebP"];
 //    [self addImageWithName:@"pia" text:@"Animated PNG (APNG)"];
-    [self addFrameImageWithText:@"Frame Animation"];
-//    [self addSpriteSheetImageWithText:@"Sprite Sheet Animation"];
+//    [self addFrameImageWithText:@"Frame Animation"];
+    [self addSpriteSheetImageWithText:@"Sprite Sheet Animation"];
     
     _scrollView.panGestureRecognizer.cancelsTouchesInView = YES;
 }

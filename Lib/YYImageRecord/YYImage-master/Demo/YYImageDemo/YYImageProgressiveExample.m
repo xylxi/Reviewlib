@@ -111,7 +111,6 @@
     YYImageDecoder *decoder = [[YYImageDecoder alloc] initWithScale:[UIScreen mainScreen].scale];
     [decoder updateData:subData final:NO];
     YYImageFrame *frame = [decoder frameAtIndex:0 decodeForDisplay:YES];
-    
     _imageView.image = frame.image;
 }
 
