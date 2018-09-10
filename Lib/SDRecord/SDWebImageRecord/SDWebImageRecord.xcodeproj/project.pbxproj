@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6F089C8E2143BB03009FE4C4 /* 97.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6F089C8D2143BB03009FE4C4 /* 97.jpg */; };
+		6F089C902143BE8B009FE4C4 /* 71.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6F089C8F2143BE8B009FE4C4 /* 71.jpg */; };
 		6F45B4682126D786007E8696 /* default_pic.png in Resources */ = {isa = PBXBuildFile; fileRef = 6F45B4672126D786007E8696 /* default_pic.png */; };
 		6F5C14C4211F3CCC00496D68 /* MasterViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F5C14C2211F3CCC00496D68 /* MasterViewController.m */; };
 		6F9E5C4E212F8C230021E5E6 /* DetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F9E5C4D212F8C230021E5E6 /* DetailViewController.m */; };
@@ -20,6 +22,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6F089C8D2143BB03009FE4C4 /* 97.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 97.jpg; sourceTree = "<group>"; };
+		6F089C8F2143BE8B009FE4C4 /* 71.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 71.jpg; sourceTree = "<group>"; };
 		6F45B4672126D786007E8696 /* default_pic.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = default_pic.png; sourceTree = "<group>"; };
 		6F5C14C2211F3CCC00496D68 /* MasterViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MasterViewController.m; sourceTree = "<group>"; };
 		6F5C14C3211F3CCC00496D68 /* MasterViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MasterViewController.h; sourceTree = "<group>"; };
@@ -81,6 +85,8 @@
 			isa = PBXGroup;
 			children = (
 				6F9E5C50212F8C810021E5E6 /* DetailViewController.xib */,
+				6F089C8D2143BB03009FE4C4 /* 97.jpg */,
+				6F089C8F2143BE8B009FE4C4 /* 71.jpg */,
 				6F45B4672126D786007E8696 /* default_pic.png */,
 				6FC8C51D211EF273000FBFEE /* AppDelegate.h */,
 				6FC8C51E211EF273000FBFEE /* AppDelegate.m */,
@@ -164,10 +170,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6F089C8E2143BB03009FE4C4 /* 97.jpg in Resources */,
 				6FC8C52A211EF274000FBFEE /* LaunchScreen.storyboard in Resources */,
 				6FC8C527211EF274000FBFEE /* Assets.xcassets in Resources */,
 				6F9E5C51212F8C820021E5E6 /* DetailViewController.xib in Resources */,
 				6F45B4682126D786007E8696 /* default_pic.png in Resources */,
+				6F089C902143BE8B009FE4C4 /* 71.jpg in Resources */,
 				6FC8C525211EF273000FBFEE /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -345,7 +353,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = L94HEL9RUT;
 				INFOPLIST_FILE = SDWebImageRecord/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -362,7 +372,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = L94HEL9RUT;
 				INFOPLIST_FILE = SDWebImageRecord/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
