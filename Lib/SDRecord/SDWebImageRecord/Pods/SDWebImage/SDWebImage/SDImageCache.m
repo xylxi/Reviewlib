@@ -558,6 +558,7 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
     if (options & SDImageCacheQueryDiskSync) {
         queryDiskBlock();
     } else {
+        // 将block添加到串行队列中，当执行到的时候，会去判断 operation 是否被取消了，以达到可以取消查询的能力
         dispatch_async(self.ioQueue, queryDiskBlock);
     }
     

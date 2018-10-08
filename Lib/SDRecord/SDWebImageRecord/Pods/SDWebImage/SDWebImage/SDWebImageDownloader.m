@@ -199,6 +199,9 @@
                                                  completed:(nullable SDWebImageDownloaderCompletedBlock)completedBlock {
     __weak SDWebImageDownloader *wself = self;
 
+    // 先会去判断当前的 url 的图片是否有在下载，如果有，那么将回调保存到 url 对应的 下载 operation 对象上，以便当下载完成后，触发回调
+    // 如果没有对应 url 的下载操作，那么创建一个 url 对应的下载请求，然后将回调保存到 opertaion 对象上。
+    // 并且返回 token ，就是对应的回调，因为imageView取消下载的话，会先将对应的回调从 operation 上删除，如果 operation 没有回调了，才真正的取消下载操作
     return [self addProgressCallback:progressBlock completedBlock:completedBlock forURL:url createCallback:^SDWebImageDownloaderOperation *{
         __strong __typeof (wself) sself = wself;
         NSTimeInterval timeoutInterval = sself.downloadTimeout;

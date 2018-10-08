@@ -64,6 +64,7 @@ static char TAG_ACTIVITY_SHOW;
     [self sd_cancelImageLoadOperationWithKey:validOperationKey];
     objc_setAssociatedObject(self, &imageURLKey, url, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     
+    // 设置站位图
     if (!(options & SDWebImageDelayPlaceholder)) {
         dispatch_main_async_safe(^{
             [self sd_setImage:placeholder imageData:nil basedOnClassOrViaCustomSetImageBlock:setImageBlock];
@@ -124,11 +125,13 @@ static char TAG_ACTIVITY_SHOW;
             // case 1a: we got an image, but the SDWebImageAvoidAutoSetImage flag is set
             // OR
             // case 1b: we got no image and the SDWebImageDelayPlaceholder is not set
+            // 不需要自动设置图片，那么触发只触发block
             if (shouldNotSetImage) {
                 dispatch_main_async_safe(callCompletedBlockClojure);
                 return;
             }
             
+            // 设置图片和触发blog
             UIImage *targetImage = nil;
             NSData *targetData = nil;
             if (image) {
@@ -157,6 +160,7 @@ static char TAG_ACTIVITY_SHOW;
                 callCompletedBlockClojure();
             });
         }];
+        // 保存 operation
         [self sd_setImageLoadOperation:operation forKey:validOperationKey];
     } else {
         dispatch_main_async_safe(^{

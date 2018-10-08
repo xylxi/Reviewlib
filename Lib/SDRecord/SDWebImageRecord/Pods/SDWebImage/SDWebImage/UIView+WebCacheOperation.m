@@ -50,6 +50,7 @@ typedef NSMapTable<NSString *, id<SDWebImageOperation>> SDOperationsDictionary;
         @synchronized (self) {
             operation = [operationDictionary objectForKey:key];
         }
+        // TODO 类型是什么
         if (operation) {
             if ([operation conformsToProtocol:@protocol(SDWebImageOperation)]) {
                 [operation cancel];

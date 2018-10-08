@@ -50,24 +50,24 @@
 -(void)viewDidLoad {
     [super viewDidLoad];
     
-    UIImageView *imageView = [[UIImageView alloc] init];
-    [self.view addSubview:imageView];
-    
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"97" ofType:@"jpg"];
-    NSData *data = [NSData dataWithContentsOfFile:path];
-    UIImage *image = [[SDWebImageCodersManager sharedInstance] decompressedImageWithImage:[UIImage imageWithContentsOfFile:path] data:&data options:@{SDWebImageCoderScaleDownLargeImagesKey:@1}];
-    
-//    UIImage *image = [UIImage imageWithData:data];
-    
-    imageView.image = image;
-    imageView.frame = CGRectMake(0, 0, self.view.frame.size.width, image.size.height / image.size.width * self.view.frame.size.width);
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [(UITableView *)self.view setContentSize:CGSizeMake(imageView.frame.size.width, imageView.frame.size.height)];
-        [(UITableView*)self.view setSeparatorStyle:UITableViewCellSeparatorStyleNone];
-        [(UITableView*)self.view setBackgroundView:[UIView new]];
-    });
-    
-    return;
+//    UIImageView *imageView = [[UIImageView alloc] init];
+//    [self.view addSubview:imageView];
+//    
+//    NSString *path = [[NSBundle mainBundle] pathForResource:@"97" ofType:@"jpg"];
+//    NSData *data = [NSData dataWithContentsOfFile:path];
+//    UIImage *image = [[SDWebImageCodersManager sharedInstance] decompressedImageWithImage:[UIImage imageWithContentsOfFile:path] data:&data options:@{SDWebImageCoderScaleDownLargeImagesKey:@1}];
+//    
+////    UIImage *image = [UIImage imageWithData:data];
+//    
+//    imageView.image = image;
+//    imageView.frame = CGRectMake(0, 0, self.view.frame.size.width, image.size.height / image.size.width * self.view.frame.size.width);
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        [(UITableView *)self.view setContentSize:CGSizeMake(imageView.frame.size.width, imageView.frame.size.height)];
+//        [(UITableView*)self.view setSeparatorStyle:UITableViewCellSeparatorStyleNone];
+//        [(UITableView*)self.view setBackgroundView:[UIView new]];
+//    });
+//    
+//    return;
     self.title = @"SDWebImage";
     self.navigationItem.rightBarButtonItem = [UIBarButtonItem.alloc initWithTitle:@"Clear Cache"
                                                                             style:UIBarButtonItemStylePlain
